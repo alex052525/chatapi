@@ -10,14 +10,14 @@ import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 
 @Entity
-open class User(
+open class User : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    open var id: Long? = null,
+    open var id: Long? = null
 
     @Column(name = "apiKey", nullable = false, length = 128)
-    open var apiKey: String? = null,
+    open lateinit var apiKey: String
 
     @OneToMany(mappedBy = "user")
     open var conversations: MutableList<Conversation> = mutableListOf()
-) : BaseTimeEntity()
+}

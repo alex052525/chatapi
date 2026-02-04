@@ -14,18 +14,18 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 
 @Entity
-open class Conversation(
+open class Conversation : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    open var id: Long? = null,
+    open var id: Long? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userId", nullable = false)
-    open var user: User? = null,
+    open lateinit var user: User
 
     @Column(name = "title", nullable = false, length = 255)
-    open var title: String? = null,
+    open lateinit var title: String
 
     @OneToMany(mappedBy = "conversation")
     open var messages: MutableList<Message> = mutableListOf()
-) : BaseTimeEntity()
+}

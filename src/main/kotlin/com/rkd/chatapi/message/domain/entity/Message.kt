@@ -16,20 +16,20 @@ import jakarta.persistence.Lob
 import jakarta.persistence.ManyToOne
 
 @Entity
-open class Message(
+open class Message : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    open var id: Long? = null,
+    open var id: Long? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversationId", nullable = false)
-    open var conversation: Conversation? = null,
+    open lateinit var conversation: Conversation
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 32)
-    open var role: MessageRole? = null,
+    open lateinit var role: MessageRole
 
     @Lob
     @Column(name = "content", nullable = false, columnDefinition = "LONGTEXT")
-    open var content: String? = null
-) : BaseTimeEntity()
+    open lateinit var content: String
+}
