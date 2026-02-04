@@ -30,6 +30,6 @@ open class Message : BaseTimeEntity() {
     open lateinit var role: MessageRole
 
     @Lob
-    @Column(name = "content", nullable = false, columnDefinition = "LONGTEXT")
+    @Column(name = "content", nullable = false)
     open lateinit var content: String
 }
