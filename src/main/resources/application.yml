@@ -23,3 +23,7 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+openai:
+  api-key: ${OPENAI_API_KEY}
+  model: gpt-4.1
