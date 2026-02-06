@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import jakarta.validation.Valid
+import org.springframework.web.bind.annotation.RequestHeader
 
 @RestController
 @RequestMapping("/api/auth")
@@ -17,8 +18,8 @@ class ApiKeyAuthController(
 ) {
 
     @PostMapping("/apiKey")
-    fun registerApiKey(@Valid @RequestBody request: ApiKeyRegisterRequest): ResponseEntity<ApiKeyRegisterResponse> {
-        val userId = apiKeyRegistrationService.registerApiKey(request.apiKey)
+    fun registerApiKey(@RequestHeader("X-API-KEY") apiKey: String): ResponseEntity<ApiKeyRegisterResponse> {
+        val userId = apiKeyRegistrationService.registerApiKey(apiKey)
         return ResponseEntity.ok(ApiKeyRegisterResponse(userId = userId))
     }
 }
