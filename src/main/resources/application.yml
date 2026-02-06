@@ -25,5 +25,8 @@ springdoc:
     path: /swagger-ui.html
 
 openai:
-  api-key: ${OPENAI_API_KEY}
+#  api-key: ${OPENAI_API_KEY}
   model: gpt-5.2
+
+security:
+  api-key-secret: ${API_KEY_SECRET}
