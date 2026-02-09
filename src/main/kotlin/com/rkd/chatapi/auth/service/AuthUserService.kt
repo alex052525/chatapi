@@ -6,15 +6,15 @@ import com.rkd.chatapi.user.service.UserService
 import org.springframework.stereotype.Service
 
 @Service
-class ApiKeyRegistrationService(
+class AuthUserService (
     private val apiKeyHasher: ApiKeyHasher,
     private val apiKeyValidator: ApiKeyValidator,
     private val userService: UserService
 ) {
-    fun registerApiKey(apiKey: String): Long {
+    fun login(apiKey: String): Long {
         apiKeyValidator.validateApiKey(apiKey)
 
         val hashedApiKey = apiKeyHasher.hash(apiKey)
-        return userService.createUserByApiKey(hashedApiKey)
+        return userService.findUserByApiKey(hashedApiKey)
     }
 }

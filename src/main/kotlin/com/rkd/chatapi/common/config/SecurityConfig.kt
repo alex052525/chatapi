@@ -1,8 +1,9 @@
-package com.rkd.chatapi.common.security
+package com.rkd.chatapi.common.config
 
+import com.rkd.chatapi.common.security.ApiKeyAuthFilter
+import com.rkd.chatapi.common.security.JwtAuthFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
@@ -10,7 +11,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 class SecurityConfig(
-    private val apiKeyAuthFilter: ApiKeyAuthFilter
+    private val apiKeyAuthFilter: ApiKeyAuthFilter,
+    private val jwtAuthFilter: JwtAuthFilter
 ) {
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
@@ -25,6 +27,7 @@ class SecurityConfig(
                 it.anyRequest().permitAll()
             }
             .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
             .build()
     }
 }
