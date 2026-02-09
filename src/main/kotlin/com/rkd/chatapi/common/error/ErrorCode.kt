@@ -14,8 +14,14 @@ enum class ErrorCode(
 
     // auth
     INVALID_API_KEY("AUTH0001", "유효하지 않은 API Key 입니다.", HttpStatus.BAD_REQUEST),
+    API_KEY_NOT_EXIST("AUTH0002", "API Key가 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
 
     // user
     USER_ALREADY_EXIST("USER0001", "이미 등록된 유저입니다.", HttpStatus.BAD_REQUEST),
     USER_NOT_FOUND("USER0002", "유저를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
+
+    // jwt
+    INVALID_ACCESS_TOKEN("JWT0001", "유효하지 않은 액세스 토큰입니다.", HttpStatus.BAD_REQUEST),
+    ACCESS_TOKEN_NOT_EXIST("JWT0002", "액세스 토큰이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
+
 }

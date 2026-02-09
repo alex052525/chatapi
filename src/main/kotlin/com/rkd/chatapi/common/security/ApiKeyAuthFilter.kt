@@ -1,8 +1,10 @@
 package com.rkd.chatapi.common.security
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.rkd.chatapi.auth.exception.ApiKeyInvalidException
 import com.rkd.chatapi.common.error.ErrorCode
 import com.rkd.chatapi.common.error.ErrorResponse
+import com.rkd.chatapi.auth.exception.ApiKeyNotExistException
 import com.rkd.chatapi.user.domain.repository.UserRepository
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -29,17 +31,9 @@ class ApiKeyAuthFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        val apiKey = extractApiKey(request)
-        if (apiKey == null) {
-            writeUnauthorized(response)
-            return
-        }
+        val apiKey = extractApiKey(request) ?: throw ApiKeyNotExistException()
 
-        val userId = resolveUserId(apiKey)
-        if (userId == null) {
-            writeUnauthorized(response)
-            return
-        }
+        val userId = resolveUserId(apiKey) ?: throw ApiKeyInvalidException()
 
         setAuthentication(userId)
         filterChain.doFilter(request, response)

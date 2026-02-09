@@ -3,6 +3,8 @@ package com.rkd.chatapi.common.security
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.rkd.chatapi.common.error.ErrorCode
 import com.rkd.chatapi.common.error.ErrorResponse
+import com.rkd.chatapi.common.security.exception.AccessTokenInvalidException
+import com.rkd.chatapi.common.security.exception.AccessTokenNotExistException
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -30,17 +32,9 @@ class JwtAuthFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        val token = extractToken(request)
-        if (token == null) {
-            writeUnauthorized(response)
-            return
-        }
+        val token = extractToken(request) ?: throw AccessTokenNotExistException()
 
-        val userId = parseUserId(token)
-        if (userId == null) {
-            writeUnauthorized(response)
-            return
-        }
+        val userId = parseUserId(token) ?: throw AccessTokenInvalidException()
 
         setAuthentication(userId)
         filterChain.doFilter(request, response)
