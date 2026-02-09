@@ -18,4 +18,10 @@ class UserService(
         }
         return userRepository.save(user).id!!
     }
+
+    fun findUserByApiKey(hashedApiKey: String): Long {
+        userValidator.validateUserRegistered(hashedApiKey)
+
+        return userRepository.findByApiKey(hashedApiKey).id!!
+    }
 }
