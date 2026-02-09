@@ -21,8 +21,7 @@ class ApiKeyAuthFilter(
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
         val path = request.servletPath ?: ""
-        if (!path.startsWith("/api/")) return true
-        return path.startsWith("/api/auth/")
+        return path != "/api/auth/login" && path != "/api/auth/apiKey"
     }
 
     override fun doFilterInternal(
@@ -30,24 +29,37 @@ class ApiKeyAuthFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        val apiKey = request.getHeader("X-API-KEY")
-        if (apiKey.isNullOrBlank()) {
+        val apiKey = extractApiKey(request)
+        if (apiKey == null) {
             writeUnauthorized(response)
             return
         }
 
+        val userId = resolveUserId(apiKey)
+        if (userId == null) {
+            writeUnauthorized(response)
+            return
+        }
+
+        setAuthentication(userId)
+        filterChain.doFilter(request, response)
+    }
+
+    private fun extractApiKey(request: HttpServletRequest): String? {
+        val apiKey = request.getHeader("X-API-KEY")
+        return if (apiKey.isNullOrBlank()) null else apiKey
+    }
+
+    private fun resolveUserId(apiKey: String): Long? {
         val hashed = apiKeyHasher.hash(apiKey)
         val user = userRepository.findByApiKey(hashed)
-        if (user == null || user.id == null) {
-            writeUnauthorized(response)
-            return
-        }
+        return user?.id
+    }
 
-        val authentication = ApiKeyAuthenticationToken(user.id!!)
+    private fun setAuthentication(userId: Long) {
+        val authentication = ApiKeyAuthToken(userId)
         authentication.isAuthenticated = true
         SecurityContextHolder.getContext().authentication = authentication
-
-        filterChain.doFilter(request, response)
     }
 
     private fun writeUnauthorized(response: HttpServletResponse) {
