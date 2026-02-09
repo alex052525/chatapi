@@ -1,5 +1,7 @@
-package com.rkd.chatapi.common.security
+package com.rkd.chatapi.common.config
 
+import com.rkd.chatapi.common.security.ApiKeyAuthFilter
+import com.rkd.chatapi.common.security.JwtAuthFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
