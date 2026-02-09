@@ -16,5 +16,6 @@ enum class ErrorCode(
     INVALID_API_KEY("AUTH0001", "유효하지 않은 API Key 입니다.", HttpStatus.BAD_REQUEST),
 
     // user
-    USER_ALREADY_EXIST("AUTH0002", "이미 등록된 유저입니다.", HttpStatus.BAD_REQUEST)
+    USER_ALREADY_EXIST("USER0001", "이미 등록된 유저입니다.", HttpStatus.BAD_REQUEST),
+    USER_NOT_FOUND("USER0002", "유저를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
 }
