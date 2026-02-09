@@ -22,6 +22,6 @@ class UserService(
     fun findUserByApiKey(hashedApiKey: String): Long {
         userValidator.validateUserRegistered(hashedApiKey)
 
-        return userRepository.findByApiKey(hashedApiKey).id!!
+        return userRepository.findByApiKey(hashedApiKey)!!.id!!
     }
 }

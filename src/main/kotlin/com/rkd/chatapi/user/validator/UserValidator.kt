@@ -11,14 +11,14 @@ class UserValidator (
 ) {
     fun validateUserNotRegistered(hashedApiKey: String) {
         val existing = userRepository.findByApiKey(hashedApiKey)
-        if (existing.id != null) {
+        if (existing?.id != null) {
             throw UserAlreadyExistException()
         }
     }
 
     fun validateUserRegistered(hashedApiKey: String) {
         val existing = userRepository.findByApiKey(hashedApiKey)
-        if (existing.id == null) {
+        if (existing?.id == null) {
             throw UserNotExistException()
         }
     }
