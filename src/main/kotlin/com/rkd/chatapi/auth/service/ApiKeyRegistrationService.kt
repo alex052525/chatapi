@@ -14,7 +14,7 @@ class ApiKeyRegistrationService(
     fun registerApiKey(apiKey: String): Long {
         apiKeyValidator.validateApiKey(apiKey)
 
-        val hashed = apiKeyHasher.hash(apiKey)
-        return userService.createUserByApiKey(hashed)
+        val hashedApiKey = apiKeyHasher.hash(apiKey)
+        return userService.createUserByApiKey(hashedApiKey)
     }
 }

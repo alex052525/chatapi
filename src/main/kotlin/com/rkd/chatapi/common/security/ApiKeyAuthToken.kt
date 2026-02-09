@@ -3,7 +3,7 @@ package com.rkd.chatapi.common.security
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
-class ApiKeyAuthenticationToken(
+class ApiKeyAuthToken(
     private val userId: Long
 ) : AbstractAuthenticationToken(listOf(SimpleGrantedAuthority("ROLE_USER"))) {
 
