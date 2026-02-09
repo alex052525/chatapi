@@ -30,3 +30,8 @@ openai:
 
 security:
   api-key-secret: ${API_KEY_SECRET}
+  jwt-secret: ${JWT_SECRET}
+  jwt-issuer: ${JWT_ISSUER:chatapi}
+  jwt-expiration-seconds: ${JWT_EXPIRATION_SECONDS:900}
+  jwt-cookie-secure: ${JWT_COOKIE_SECURE:false}
+  jwt-cookie-path: ${JWT_COOKIE_PATH:/}
