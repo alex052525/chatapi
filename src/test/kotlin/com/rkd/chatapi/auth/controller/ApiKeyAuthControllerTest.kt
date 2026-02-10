@@ -4,7 +4,8 @@ import com.rkd.chatapi.auth.service.ApiKeyRegistrationService
 import com.rkd.chatapi.auth.service.AuthUserService
 import com.rkd.chatapi.auth.util.CookieUtil
 import com.rkd.chatapi.common.security.JwtAuthFilter
-import com.rkd.chatapi.common.security.JwtTokenProvider
+import com.rkd.chatapi.auth.dto.response.ApiKeyRegisterResponse
+import com.rkd.chatapi.auth.dto.response.LoginResponse
 import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -15,6 +16,7 @@ import org.mockito.kotlin.whenever
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseCookie
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
@@ -28,9 +30,6 @@ class ApiKeyAuthControllerTest {
     private lateinit var authUserService: AuthUserService
 
     @Mock
-    private lateinit var jwtTokenProvider: JwtTokenProvider
-
-    @Mock
     private lateinit var cookieUtil: CookieUtil
 
     private lateinit var mockMvc: MockMvc
@@ -40,7 +39,6 @@ class ApiKeyAuthControllerTest {
         val controller = ApiKeyAuthController(
             apiKeyRegistrationService = apiKeyRegistrationService,
             authUserService = authUserService,
-            jwtTokenProvider = jwtTokenProvider,
             cookieUtil = cookieUtil
         )
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build()
@@ -55,10 +53,14 @@ class ApiKeyAuthControllerTest {
             .path("/")
             .build()
 
-        whenever(authUserService.login("valid-api-key")).thenReturn(userId)
-        whenever(jwtTokenProvider.createToken(userId)).thenReturn(token)
-        whenever(jwtTokenProvider.getExpirationSeconds()).thenReturn(900)
-        whenever(cookieUtil.createAccessTokenCookie(userId)).thenReturn(cookie)
+        whenever(authUserService.login("valid-api-key")).thenReturn(
+            LoginResponse(
+                userId = userId,
+                accessToken = token,
+                expiresInSeconds = 900
+            )
+        )
+        whenever(cookieUtil.createAccessTokenCookie(token)).thenReturn(cookie)
 
         mockMvc.get("/api/auth/login") {
             header("X-API-KEY", "valid-api-key")
@@ -70,6 +72,22 @@ class ApiKeyAuthControllerTest {
                 jsonPath("$.userId") { value(userId) }
                 jsonPath("$.accessToken") { value(token) }
                 jsonPath("$.expiresInSeconds") { value(900) }
+            }
+    }
+
+    @Test
+    fun `registerApiKey returns user id`() {
+        val userId = 1L
+        whenever(apiKeyRegistrationService.registerApiKey("valid-api-key"))
+            .thenReturn(ApiKeyRegisterResponse(userId = userId))
+
+        mockMvc.post("/api/auth/apiKey") {
+            header("X-API-KEY", "valid-api-key")
+        }
+            .andExpect {
+                status { isOk() }
+                content { contentType(MediaType.APPLICATION_JSON) }
+                jsonPath("$.userId") { value(userId) }
             }
     }
 }
