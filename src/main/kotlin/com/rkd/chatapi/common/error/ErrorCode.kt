@@ -24,4 +24,7 @@ enum class ErrorCode(
     INVALID_ACCESS_TOKEN("JWT0001", "유효하지 않은 액세스 토큰입니다.", HttpStatus.BAD_REQUEST),
     ACCESS_TOKEN_NOT_EXIST("JWT0002", "액세스 토큰이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
 
+    // conversation
+    CONVERSATION_NOT_FOUND("CONVERSATION0001", "대화를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
+
 }
