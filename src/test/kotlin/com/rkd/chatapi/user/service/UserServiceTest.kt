@@ -48,7 +48,7 @@ class UserServiceTest {
         }
 
         // when
-        val result = userService.createUserByApiKey("hashed-key")
+        val result = userService.createUserByApiKey("hashed-key", "enc-key")
 
         // then
         assertThat(result).isEqualTo(2L)

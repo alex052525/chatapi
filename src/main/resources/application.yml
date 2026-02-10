@@ -27,9 +27,12 @@ springdoc:
 openai:
 #  api-key: ${OPENAI_API_KEY}
   model: gpt-5.2
+  connect-timeout-ms: 5000
+  read-timeout-ms: 30000
 
 security:
   api-key-secret: ${API_KEY_SECRET}
+  api-key-enc-secret: ${API_KEY_ENC_SECRET}
   jwt-secret: ${JWT_SECRET}
   jwt-issuer: ${JWT_ISSUER:chatapi}
   jwt-expiration-seconds: ${JWT_EXPIRATION_SECONDS:900}

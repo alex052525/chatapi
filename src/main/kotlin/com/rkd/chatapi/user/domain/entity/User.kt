@@ -20,6 +20,9 @@ open class User : BaseTimeEntity() {
     @Column(name = "apiKey", nullable = false, length = 128)
     open lateinit var apiKey: String
 
+    @Column(name = "apiKeyEnc", columnDefinition = "text")
+    open var apiKeyEnc: String? = null
+
     @OneToMany(mappedBy = "user")
     open var conversations: MutableList<Conversation> = mutableListOf()
 }
