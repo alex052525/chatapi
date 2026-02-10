@@ -1,15 +1,12 @@
 package com.rkd.chatapi.common.security
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.rkd.chatapi.auth.exception.ApiKeyInvalidException
-import com.rkd.chatapi.common.error.ErrorCode
-import com.rkd.chatapi.common.error.ErrorResponse
+import com.rkd.chatapi.auth.validator.ApiKeyValidator
 import com.rkd.chatapi.auth.exception.ApiKeyNotExistException
 import com.rkd.chatapi.user.domain.repository.UserRepository
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.http.MediaType
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
@@ -18,7 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 class ApiKeyAuthFilter(
     private val userRepository: UserRepository,
     private val apiKeyHasher: ApiKeyHasher,
-    private val objectMapper: ObjectMapper
+    private val apiKeyValidator: ApiKeyValidator
 ) : OncePerRequestFilter() {
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
@@ -33,8 +30,13 @@ class ApiKeyAuthFilter(
     ) {
         val apiKey = extractApiKey(request) ?: throw ApiKeyNotExistException()
 
-        val userId = resolveUserId(apiKey) ?: throw ApiKeyInvalidException()
+        if (isRegistrationPath(request)) {
+            apiKeyValidator.validateApiKey(apiKey)
+            filterChain.doFilter(request, response)
+            return
+        }
 
+        val userId = resolveUserId(apiKey) ?: throw ApiKeyInvalidException()
         setAuthentication(userId)
         filterChain.doFilter(request, response)
     }
@@ -42,6 +44,11 @@ class ApiKeyAuthFilter(
     private fun extractApiKey(request: HttpServletRequest): String? {
         val apiKey = request.getHeader("X-API-KEY")
         return if (apiKey.isNullOrBlank()) null else apiKey
+    }
+
+    private fun isRegistrationPath(request: HttpServletRequest): Boolean {
+        val path = request.servletPath ?: ""
+        return path == "/api/auth/apiKey"
     }
 
     private fun resolveUserId(apiKey: String): Long? {
