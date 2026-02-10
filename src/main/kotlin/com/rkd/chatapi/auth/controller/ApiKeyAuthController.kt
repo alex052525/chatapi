@@ -23,16 +23,16 @@ class ApiKeyAuthController(
 
     @PostMapping("/apiKey")
     fun registerApiKey(@RequestHeader("X-API-KEY") apiKey: String): ResponseEntity<ApiKeyRegisterResponse> {
-        val response = apiKeyRegistrationService.registerApiKey(apiKey)
-        return ResponseEntity.ok(response)
+        val registerApiKeyResponse = apiKeyRegistrationService.registerApiKey(apiKey)
+        return ResponseEntity.ok(registerApiKeyResponse)
     }
 
     @GetMapping("/login")
     fun login(@RequestHeader("X-API-KEY") apiKey: String): ResponseEntity<LoginResponse> {
-        val response = authUserService.login(apiKey)
-        val cookie = cookieUtil.createAccessTokenCookie(token = response.accessToken)
+        val loginResponse = authUserService.login(apiKey)
+        val cookie = cookieUtil.createAccessTokenCookie(token = loginResponse.accessToken)
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, cookie.toString())
-            .body(response)
+            .body(loginResponse)
     }
 }
