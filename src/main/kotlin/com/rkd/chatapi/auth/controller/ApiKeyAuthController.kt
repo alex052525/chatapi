@@ -5,7 +5,6 @@ import com.rkd.chatapi.auth.dto.response.LoginResponse
 import com.rkd.chatapi.auth.service.ApiKeyRegistrationService
 import com.rkd.chatapi.auth.service.AuthUserService
 import com.rkd.chatapi.auth.util.CookieUtil
-import com.rkd.chatapi.common.security.JwtTokenProvider
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -19,29 +18,21 @@ import org.springframework.web.bind.annotation.RestController
 class ApiKeyAuthController(
     private val apiKeyRegistrationService: ApiKeyRegistrationService,
     private val authUserService: AuthUserService,
-    private val jwtTokenProvider: JwtTokenProvider,
     private val cookieUtil: CookieUtil
 ) {
 
     @PostMapping("/apiKey")
     fun registerApiKey(@RequestHeader("X-API-KEY") apiKey: String): ResponseEntity<ApiKeyRegisterResponse> {
-        val userId = apiKeyRegistrationService.registerApiKey(apiKey)
-        return ResponseEntity.ok(ApiKeyRegisterResponse(userId = userId))
+        val response = apiKeyRegistrationService.registerApiKey(apiKey)
+        return ResponseEntity.ok(response)
     }
 
     @GetMapping("/login")
     fun login(@RequestHeader("X-API-KEY") apiKey: String): ResponseEntity<LoginResponse> {
-        val userId = authUserService.login(apiKey)
-        val token = jwtTokenProvider.createToken(userId)
-        val cookie = cookieUtil.createAccessTokenCookie(userId = userId)
+        val response = authUserService.login(apiKey)
+        val cookie = cookieUtil.createAccessTokenCookie(token = response.accessToken)
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, cookie.toString())
-            .body(
-                LoginResponse(
-                    userId = userId,
-                    accessToken = token,
-                    expiresInSeconds = jwtTokenProvider.getExpirationSeconds()
-                )
-            )
+            .body(response)
     }
 }
