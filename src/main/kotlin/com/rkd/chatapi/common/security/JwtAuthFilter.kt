@@ -61,11 +61,4 @@ class JwtAuthFilter(
         SecurityContextHolder.getContext().authentication = authentication
     }
 
-    private fun writeUnauthorized(response: HttpServletResponse) {
-        response.status = ErrorCode.ACCESS_DENIED.httpStatus.value()
-        response.contentType = MediaType.APPLICATION_JSON_VALUE
-        response.characterEncoding = "UTF-8"
-        val body = ErrorResponse.of(ErrorCode.ACCESS_DENIED)
-        response.writer.write(objectMapper.writeValueAsString(body))
-    }
 }
