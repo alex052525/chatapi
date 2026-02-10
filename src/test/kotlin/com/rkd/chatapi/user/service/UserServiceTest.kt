@@ -2,6 +2,7 @@ package com.rkd.chatapi.user.service
 
 import com.rkd.chatapi.user.domain.entity.User
 import com.rkd.chatapi.user.domain.repository.UserRepository
+import com.rkd.chatapi.user.validator.UserValidator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -20,8 +21,11 @@ class UserServiceTest {
     @Mock
     private lateinit var userRepository: UserRepository
 
+    @Mock
+    private lateinit var userValidator: UserValidator
+
     @Test
-    fun `findOrCreateUserByApiKey returns existing user id`() {
+    fun `findUserByApiKey returns existing user id`() {
         // given
         val existing = User().apply {
             id = 1L
@@ -30,16 +34,15 @@ class UserServiceTest {
         whenever(userRepository.findByApiKey("hashed-key")).thenReturn(existing)
 
         // when
-        val result = userService.createUserByApiKey("hashed-key")
+        val result = userService.findUserByApiKey("hashed-key")
 
         // then
         assertThat(result).isEqualTo(1L)
     }
 
     @Test
-    fun `findOrCreateUserByApiKey creates new user when not found`() {
+    fun `createUserByApiKey creates new user`() {
         // given
-        whenever(userRepository.findByApiKey("hashed-key")).thenReturn(null)
         whenever(userRepository.save(any<User>())).thenAnswer { invocation ->
             (invocation.arguments[0] as User).apply { id = 2L }
         }
