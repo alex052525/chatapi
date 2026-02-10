@@ -1,0 +1,75 @@
+package com.rkd.chatapi.auth.controller
+
+import com.rkd.chatapi.auth.service.ApiKeyRegistrationService
+import com.rkd.chatapi.auth.service.AuthUserService
+import com.rkd.chatapi.auth.util.CookieUtil
+import com.rkd.chatapi.common.security.JwtAuthFilter
+import com.rkd.chatapi.common.security.JwtTokenProvider
+import org.hamcrest.Matchers.containsString
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mock
+import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.whenever
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseCookie
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
+
+@ExtendWith(MockitoExtension::class)
+class ApiKeyAuthControllerTest {
+
+    @Mock
+    private lateinit var apiKeyRegistrationService: ApiKeyRegistrationService
+
+    @Mock
+    private lateinit var authUserService: AuthUserService
+
+    @Mock
+    private lateinit var jwtTokenProvider: JwtTokenProvider
+
+    @Mock
+    private lateinit var cookieUtil: CookieUtil
+
+    private lateinit var mockMvc: MockMvc
+
+    @BeforeEach
+    fun setUp() {
+        val controller = ApiKeyAuthController(
+            apiKeyRegistrationService = apiKeyRegistrationService,
+            authUserService = authUserService,
+            jwtTokenProvider = jwtTokenProvider,
+            cookieUtil = cookieUtil
+        )
+        mockMvc = MockMvcBuilders.standaloneSetup(controller).build()
+    }
+
+    @Test
+    fun `login returns token and sets cookie`() {
+        val userId = 1L
+        val token = "token-value"
+        val cookie = ResponseCookie.from(JwtAuthFilter.ACCESS_TOKEN_COOKIE, token)
+            .httpOnly(true)
+            .path("/")
+            .build()
+
+        whenever(authUserService.login("valid-api-key")).thenReturn(userId)
+        whenever(jwtTokenProvider.createToken(userId)).thenReturn(token)
+        whenever(jwtTokenProvider.getExpirationSeconds()).thenReturn(900)
+        whenever(cookieUtil.createAccessTokenCookie(userId)).thenReturn(cookie)
+
+        mockMvc.get("/api/auth/login") {
+            header("X-API-KEY", "valid-api-key")
+        }
+            .andExpect {
+                status { isOk() }
+                content { contentType(MediaType.APPLICATION_JSON) }
+                header { string("Set-Cookie", containsString("${JwtAuthFilter.ACCESS_TOKEN_COOKIE}=$token")) }
+                jsonPath("$.userId") { value(userId) }
+                jsonPath("$.accessToken") { value(token) }
+                jsonPath("$.expiresInSeconds") { value(900) }
+            }
+    }
+}
