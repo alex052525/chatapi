@@ -7,6 +7,7 @@ import com.rkd.chatapi.message.domain.repository.MessageRepository
 import com.rkd.chatapi.chat.dto.request.ChatCompletionRequest
 import com.rkd.chatapi.chat.dto.response.ChatCompletionResponse
 import com.rkd.chatapi.chat.adapter.OpenAiChatAdapter
+import com.rkd.chatapi.conversation.domain.entity.Conversation
 import com.rkd.chatapi.conversation.exception.ConversationNotExistException
 import org.springframework.stereotype.Service
 
@@ -20,24 +21,32 @@ class ChatCompletionService(
         val conversation = conversationRepository.findById(request.conversationId)
             .orElseThrow { ConversationNotExistException() }
 
-        val userMessage = Message().apply {
-            this.conversation = conversation
-            this.role = MessageRole.USER
-            this.content = request.content
-        }
-        messageRepository.save(userMessage)
+        saveUserMessage(conversation, request.content)
 
         val answer = openAiChatAdapter.completeChat(userId, request.content)
-        val assistantMessage = Message().apply {
-            this.conversation = conversation
-            this.role = MessageRole.ASSISTANT
-            this.content = answer
-        }
-        val savedAssistant = messageRepository.save(assistantMessage)
+        val savedAssistant = saveAssistantMessage(conversation, answer)
 
         return ChatCompletionResponse(
             messageId = savedAssistant.id!!,
             answer = answer
         )
+    }
+
+    private fun saveUserMessage(conversation: Conversation, content: String) {
+        val userMessage = Message().apply {
+            this.conversation = conversation
+            this.role = MessageRole.USER
+            this.content = content
+        }
+        messageRepository.save(userMessage)
+    }
+
+    private fun saveAssistantMessage(conversation: Conversation, content: String): Message {
+        val assistantMessage = Message().apply {
+            this.conversation = conversation
+            this.role = MessageRole.ASSISTANT
+            this.content = content
+        }
+        return messageRepository.save(assistantMessage)
     }
 }
