@@ -14,7 +14,7 @@ import jakarta.persistence.Table
 @Table(name = "users")
 class User(
     apiKey: String,
-    apiKeyEnc: String? = null
+    apiKeyEnc: String
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +24,7 @@ class User(
     var apiKey: String = apiKey
         private set
 
-    @Column(name = "apiKeyEnc", columnDefinition = "text")
+    @Column(name = "apiKeyEnc", nullable = false, columnDefinition = "text")
     var apiKeyEnc: String? = apiKeyEnc
         private set
 
