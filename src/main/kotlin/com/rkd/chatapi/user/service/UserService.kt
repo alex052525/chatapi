@@ -10,12 +10,10 @@ class UserService(
     private val userRepository: UserRepository,
     private val userValidator: UserValidator
 ) {
-    fun createUserByApiKey(hashedApiKey: String): Long {
+    fun createUserByApiKey(hashedApiKey: String, encryptedApiKey: String): Long {
         userValidator.validateUserNotRegistered(hashedApiKey)
 
-        val user = User().apply {
-            this.apiKey = hashedApiKey
-        }
+        val user = User(apiKey = hashedApiKey, apiKeyEnc = encryptedApiKey)
         return userRepository.save(user).id!!
     }
 

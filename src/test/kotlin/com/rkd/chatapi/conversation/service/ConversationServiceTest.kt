@@ -30,9 +30,8 @@ class ConversationServiceTest {
 
     @Test
     fun `createConversation returns conversation id`() {
-        val user = User().apply {
+        val user = User(apiKey = "hashed-key").apply {
             id = 1L
-            apiKey = "hashed-key"
         }
         val request = ConversationCreateRequest(title = "hello")
         whenever(userRepository.findById(1L)).thenReturn(Optional.of(user))
