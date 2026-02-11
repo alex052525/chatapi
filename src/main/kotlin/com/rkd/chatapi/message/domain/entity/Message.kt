@@ -35,8 +35,7 @@ class Message(
     var role: MessageRole = role
         private set
 
-    @Lob
-    @Column(name = "content", nullable = false)
+    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     var content: String = content
         private set
 }
