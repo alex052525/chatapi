@@ -6,6 +6,7 @@ import com.rkd.chatapi.message.domain.entity.Message
 import com.rkd.chatapi.message.domain.repository.MessageRepository
 import com.rkd.chatapi.chat.dto.request.ChatCompletionRequest
 import com.rkd.chatapi.chat.adapter.OpenAiChatAdapter
+import com.rkd.chatapi.user.domain.entity.User
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -33,7 +34,10 @@ class ChatCompletionServiceTest {
 
     @Test
     fun `createCompletion saves user and assistant messages and returns response`() {
-        val conversation = Conversation().apply { id = 1L }
+        val conversation = Conversation(
+            user = User(apiKey = "hashed-key"),
+            title = "hello"
+        ).apply { id = 1L }
         val request = ChatCompletionRequest(conversationId = 1L, content = "hi")
 
         whenever(conversationRepository.findById(1L)).thenReturn(Optional.of(conversation))

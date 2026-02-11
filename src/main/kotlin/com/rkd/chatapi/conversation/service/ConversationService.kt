@@ -15,10 +15,10 @@ class ConversationService(
 ) {
     fun createConversation(userId: Long, conversationCreateRequest: ConversationCreateRequest): ConversationCreateResponse {
         val user = userRepository.findById(userId).orElseThrow { UserNotExistException() }
-        val conversation = Conversation().apply {
-            this.user = user
-            this.title = conversationCreateRequest.title
-        }
+        val conversation = Conversation(
+            user = user,
+            title = conversationCreateRequest.title
+        )
         return ConversationCreateResponse(conversationRepository.save(conversation).id!!)
     }
 }

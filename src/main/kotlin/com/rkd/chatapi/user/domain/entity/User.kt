@@ -12,17 +12,22 @@ import jakarta.persistence.Table
 
 @Entity
 @Table(name = "users")
-open class User : BaseTimeEntity() {
+class User(
+    apiKey: String,
+    apiKeyEnc: String? = null
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    open var id: Long? = null
+    var id: Long? = null
 
     @Column(name = "apiKey", nullable = false, length = 128)
-    open lateinit var apiKey: String
+    var apiKey: String = apiKey
+        private set
 
     @Column(name = "apiKeyEnc", columnDefinition = "text")
-    open var apiKeyEnc: String? = null
+    var apiKeyEnc: String? = apiKeyEnc
+        private set
 
     @OneToMany(mappedBy = "user")
-    open var conversations: MutableList<Conversation> = mutableListOf()
+    var conversations: MutableList<Conversation> = mutableListOf()
 }

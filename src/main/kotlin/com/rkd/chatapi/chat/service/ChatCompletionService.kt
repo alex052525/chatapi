@@ -33,20 +33,20 @@ class ChatCompletionService(
     }
 
     private fun saveUserMessage(conversation: Conversation, content: String) {
-        val userMessage = Message().apply {
-            this.conversation = conversation
-            this.role = MessageRole.USER
-            this.content = content
-        }
+        val userMessage = Message(
+            conversation = conversation,
+            role = MessageRole.USER,
+            content = content
+        )
         messageRepository.save(userMessage)
     }
 
     private fun saveAssistantMessage(conversation: Conversation, content: String): Message {
-        val assistantMessage = Message().apply {
-            this.conversation = conversation
-            this.role = MessageRole.ASSISTANT
-            this.content = content
-        }
+        val assistantMessage = Message(
+            conversation = conversation,
+            role = MessageRole.ASSISTANT,
+            content = content
+        )
         return messageRepository.save(assistantMessage)
     }
 }

@@ -15,11 +15,11 @@ class ConversationRepositoryTest @Autowired constructor(
 ) {
     @Test
     fun `save stores conversation with user and title`() {
-        val user = userRepository.save(User().apply { apiKey = "hashed-key" })
-        val conversation = Conversation().apply {
-            this.user = user
-            this.title = "hello"
-        }
+        val user = userRepository.save(User(apiKey = "hashed-key"))
+        val conversation = Conversation(
+            user = user,
+            title = "hello"
+        )
 
         val saved = conversationRepository.save(conversation)
 
