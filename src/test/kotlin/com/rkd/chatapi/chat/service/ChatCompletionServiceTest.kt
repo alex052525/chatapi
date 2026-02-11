@@ -35,7 +35,7 @@ class ChatCompletionServiceTest {
     @Test
     fun `createCompletion saves user and assistant messages and returns response`() {
         val conversation = Conversation(
-            user = User(apiKey = "hashed-key"),
+            user = User(apiKey = "hashed-key", apiKeyEnc = "enc-key"),
             title = "hello"
         ).apply { id = 1L }
         val request = ChatCompletionRequest(conversationId = 1L, content = "hi")

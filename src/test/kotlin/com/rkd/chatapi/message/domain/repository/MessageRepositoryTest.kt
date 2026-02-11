@@ -19,7 +19,7 @@ class MessageRepositoryTest @Autowired constructor(
 ) {
     @Test
     fun `save stores message with conversation and role`() {
-        val user = userRepository.save(User(apiKey = "hashed-key"))
+        val user = userRepository.save(User(apiKey = "hashed-key", apiKeyEnc = "enc-key"))
         val conversation = conversationRepository.save(
             Conversation(
                 user = user,

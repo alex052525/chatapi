@@ -27,7 +27,7 @@ class UserServiceTest {
     @Test
     fun `findUserByApiKey returns existing user id`() {
         // given
-        val existing = User(apiKey = "hashed-key").apply {
+        val existing = User(apiKey = "hashed-key", apiKeyEnc = "enc-key").apply {
             id = 1L
         }
         whenever(userRepository.findByApiKey("hashed-key")).thenReturn(existing)

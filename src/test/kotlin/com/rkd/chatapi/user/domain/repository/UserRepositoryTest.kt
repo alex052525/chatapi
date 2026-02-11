@@ -14,7 +14,7 @@ class UserRepositoryTest(
     @Test
     fun `findByApiKey returns user when apiKey matches`() {
         // given
-        val user = User(apiKey = "hashed-key")
+        val user = User(apiKey = "hashed-key", apiKeyEnc = "enc-key")
         val saved = userRepository.save(user)
 
         // when
@@ -29,7 +29,7 @@ class UserRepositoryTest(
     @Test
     fun `findByApiKey returns null when apiKey does not match`() {
         // given
-        val user = User(apiKey = "hashed-key")
+        val user = User(apiKey = "hashed-key", apiKeyEnc = "enc-key")
         userRepository.save(user)
 
         // when

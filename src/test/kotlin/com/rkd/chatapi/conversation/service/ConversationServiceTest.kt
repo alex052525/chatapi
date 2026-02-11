@@ -30,7 +30,7 @@ class ConversationServiceTest {
 
     @Test
     fun `createConversation returns conversation id`() {
-        val user = User(apiKey = "hashed-key").apply {
+        val user = User(apiKey = "hashed-key", apiKeyEnc = "enc-key").apply {
             id = 1L
         }
         val request = ConversationCreateRequest(title = "hello")
