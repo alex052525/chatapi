@@ -13,31 +13,16 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 
 @ExtendWith(MockitoExtension::class)
-class UserServiceTest {
+class UserManagementServiceTest {
 
     @InjectMocks
-    private lateinit var userService: UserService
+    private lateinit var userManagementService: UserManagementService
 
     @Mock
     private lateinit var userRepository: UserRepository
 
     @Mock
     private lateinit var userValidator: UserValidator
-
-    @Test
-    fun `findUserByApiKey returns existing user id`() {
-        // given
-        val existing = User(apiKey = "hashed-key", apiKeyEnc = "enc-key").apply {
-            id = 1L
-        }
-        whenever(userRepository.findByApiKey("hashed-key")).thenReturn(existing)
-
-        // when
-        val result = userService.findUserByApiKey("hashed-key")
-
-        // then
-        assertThat(result).isEqualTo(1L)
-    }
 
     @Test
     fun `createUserByApiKey creates new user`() {
@@ -47,7 +32,7 @@ class UserServiceTest {
         }
 
         // when
-        val result = userService.createUserByApiKey("hashed-key", "enc-key")
+        val result = userManagementService.createUserByApiKey("hashed-key", "enc-key")
 
         // then
         assertThat(result).isEqualTo(2L)

@@ -1,7 +1,7 @@
 package com.rkd.chatapi.auth.controller
 
-import com.rkd.chatapi.auth.service.ApiKeyRegistrationService
-import com.rkd.chatapi.auth.service.AuthUserService
+import com.rkd.chatapi.auth.service.ApiKeyManagementService
+import com.rkd.chatapi.auth.service.ApiKeyLoginService
 import com.rkd.chatapi.auth.util.CookieUtil
 import com.rkd.chatapi.common.security.JwtAuthFilter
 import com.rkd.chatapi.auth.dto.response.ApiKeyRegisterResponse
@@ -24,10 +24,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 class ApiKeyAuthControllerTest {
 
     @Mock
-    private lateinit var apiKeyRegistrationService: ApiKeyRegistrationService
+    private lateinit var apiKeyManagementService: ApiKeyManagementService
 
     @Mock
-    private lateinit var authUserService: AuthUserService
+    private lateinit var apiKeyLoginService: ApiKeyLoginService
 
     @Mock
     private lateinit var cookieUtil: CookieUtil
@@ -37,8 +37,8 @@ class ApiKeyAuthControllerTest {
     @BeforeEach
     fun setUp() {
         val controller = ApiKeyAuthController(
-            apiKeyRegistrationService = apiKeyRegistrationService,
-            authUserService = authUserService,
+            apiKeyManagementService = apiKeyManagementService,
+            apiKeyLoginService = apiKeyLoginService,
             cookieUtil = cookieUtil
         )
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build()
@@ -53,7 +53,7 @@ class ApiKeyAuthControllerTest {
             .path("/")
             .build()
 
-        whenever(authUserService.login("valid-api-key")).thenReturn(
+        whenever(apiKeyLoginService.login("valid-api-key")).thenReturn(
             LoginResponse(
                 userId = userId,
                 accessToken = token,
@@ -78,7 +78,7 @@ class ApiKeyAuthControllerTest {
     @Test
     fun `registerApiKey returns user id`() {
         val userId = 1L
-        whenever(apiKeyRegistrationService.registerApiKey("valid-api-key"))
+        whenever(apiKeyManagementService.registerApiKey("valid-api-key"))
             .thenReturn(ApiKeyRegisterResponse(userId = userId))
 
         mockMvc.post("/api/auth/apiKey") {

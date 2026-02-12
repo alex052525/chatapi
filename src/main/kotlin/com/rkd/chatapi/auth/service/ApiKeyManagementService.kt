@@ -4,21 +4,21 @@ import com.rkd.chatapi.auth.dto.response.ApiKeyRegisterResponse
 import com.rkd.chatapi.auth.validator.ApiKeyValidator
 import com.rkd.chatapi.common.security.ApiKeyEncryptor
 import com.rkd.chatapi.common.security.ApiKeyHasher
-import com.rkd.chatapi.user.service.UserService
+import com.rkd.chatapi.user.service.UserManagementService
 import org.springframework.stereotype.Service
 
 @Service
-class ApiKeyRegistrationService(
+class ApiKeyManagementService(
     private val apiKeyHasher: ApiKeyHasher,
     private val apiKeyValidator: ApiKeyValidator,
     private val apiKeyEncryptor: ApiKeyEncryptor,
-    private val userService: UserService
+    private val userManagementService: UserManagementService
 ) {
     fun registerApiKey(apiKey: String): ApiKeyRegisterResponse {
         apiKeyValidator.validateApiKey(apiKey)
 
         val hashedApiKey = apiKeyHasher.hash(apiKey)
         val encryptedApiKey = apiKeyEncryptor.encrypt(apiKey)
-        return ApiKeyRegisterResponse(userService.createUserByApiKey(hashedApiKey, encryptedApiKey))
+        return ApiKeyRegisterResponse(userManagementService.createUserByApiKey(hashedApiKey, encryptedApiKey))
     }
 }

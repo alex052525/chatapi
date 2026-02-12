@@ -3,7 +3,7 @@ package com.rkd.chatapi.conversation.controller
 import com.rkd.chatapi.common.security.JwtAuthToken
 import com.rkd.chatapi.conversation.dto.request.ConversationCreateRequest
 import com.rkd.chatapi.conversation.dto.response.ConversationCreateResponse
-import com.rkd.chatapi.conversation.service.ConversationService
+import com.rkd.chatapi.conversation.service.ConversationManagementService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -18,16 +18,16 @@ import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
 @ExtendWith(MockitoExtension::class)
-class ConversationControllerTest {
+class ConversationManagementControllerTest {
 
     @Mock
-    private lateinit var conversationService: ConversationService
+    private lateinit var conversationManagementService: ConversationManagementService
 
     private lateinit var mockMvc: MockMvc
 
     @BeforeEach
     fun setUp() {
-        val controller = ConversationController(conversationService)
+        val controller = ConversationManagementController(conversationManagementService)
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
             .setCustomArgumentResolvers(AuthenticationPrincipalArgumentResolver())
             .build()
@@ -40,7 +40,7 @@ class ConversationControllerTest {
         val conversationId = 10L
 
         val request = ConversationCreateRequest(title)
-        whenever(conversationService.createConversation(userId, request))
+        whenever(conversationManagementService.createConversation(userId, request))
             .thenReturn(ConversationCreateResponse(conversationId))
 
         val authentication = JwtAuthToken(userId).apply { isAuthenticated = true }
