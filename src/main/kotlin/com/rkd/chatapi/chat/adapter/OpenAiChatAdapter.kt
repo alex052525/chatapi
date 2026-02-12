@@ -20,7 +20,7 @@ class OpenAiChatAdapter(
     @Value("\${openai.connect-timeout-ms}") private val connectTimeoutMs: Long,
     @Value("\${openai.read-timeout-ms}") private val readTimeoutMs: Long
 ) {
-    fun completeChat(userId: Long, content: String): String {
+    fun completeChat(userId: Long, messages: List<OpenAiChatMessage>): String {
         // 암호화된 API Key를 복호화해 OpenAI 호출에 사용할 원문 키 준비
         val apiKey = decryptApiKey(userId)
 
@@ -40,7 +40,7 @@ class OpenAiChatAdapter(
         // OpenAI Chat Completions 요청 바디 구성
         val request = OpenAiChatCompletionRequest(
             model = model,
-            messages = listOf(OpenAiChatMessage(role = "user", content = content))
+            messages = messages
         )
 
         // OpenAI에 요청을 보내고 응답 역직렬화

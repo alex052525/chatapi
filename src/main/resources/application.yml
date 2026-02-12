@@ -29,6 +29,7 @@ openai:
   model: gpt-5.2
   connect-timeout-ms: 5000
   read-timeout-ms: 30000
+  history-limit: 3
 
 security:
   api-key-secret: ${API_KEY_SECRET}
