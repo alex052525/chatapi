@@ -20,7 +20,7 @@ class ConversationInfoController(
         @RequestParam(required = false) cursor: Long?,
         @RequestParam(defaultValue = "3") size: Int
     ): ResponseEntity<ConversationListResponse> {
-        val response = conversationInfoService.getConversations(userId, cursor, size)
-        return ResponseEntity.ok(response)
+        val conversationsGetResponse = conversationInfoService.getConversations(userId, cursor, size)
+        return ResponseEntity.ok(conversationsGetResponse)
     }
 }

@@ -20,7 +20,7 @@ class ConversationManagementController(
         @RequestBody conversationCreateRequest: ConversationCreateRequest,
         @LoginUser userId: Long
     ): ResponseEntity<ConversationCreateResponse> {
-        val response = conversationManagementService.createConversation(userId, conversationCreateRequest)
-        return ResponseEntity.ok(response)
+        val conversationCreateResponse = conversationManagementService.createConversation(userId, conversationCreateRequest)
+        return ResponseEntity.ok(conversationCreateResponse)
     }
 }
