@@ -25,11 +25,9 @@ class ConversationInfoService(
 
     private fun fetchConversations(userId: Long, cursor: Long?, size: Int): List<Conversation> {
         val pageable = PageRequest.of(0, size + 1)
-        return if (cursor == null) {
-            conversationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
-        } else {
-            conversationRepository.findByUserAndCursorOrderByCreatedAtDesc(userId, cursor, pageable)
-        }
+        return cursor?.let {
+            conversationRepository.findByUserAndCursorOrderByCreatedAtDesc(userId, it, pageable)
+        } ?: conversationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
     }
 
     private fun Conversation.toInfoResponse() = ConversationInfoResponse(title = title)
