@@ -1,12 +1,16 @@
 package com.rkd.chatapi.common.security
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.rkd.chatapi.auth.exception.ApiKeyInvalidException
 import com.rkd.chatapi.auth.validator.ApiKeyValidator
 import com.rkd.chatapi.auth.exception.ApiKeyNotExistException
+import com.rkd.chatapi.common.error.ErrorResponse
+import com.rkd.chatapi.common.error.exception.BusinessException
 import com.rkd.chatapi.user.domain.repository.UserRepository
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.MediaType
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
@@ -15,7 +19,8 @@ import org.springframework.web.filter.OncePerRequestFilter
 class ApiKeyAuthFilter(
     private val userRepository: UserRepository,
     private val apiKeyHasher: ApiKeyHasher,
-    private val apiKeyValidator: ApiKeyValidator
+    private val apiKeyValidator: ApiKeyValidator,
+    private val objectMapper: ObjectMapper
 ) : OncePerRequestFilter() {
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
@@ -28,17 +33,25 @@ class ApiKeyAuthFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        val apiKey = extractApiKey(request) ?: throw ApiKeyNotExistException()
+        try {
+            val apiKey = extractApiKey(request) ?: throw ApiKeyNotExistException()
 
-        if (isRegistrationPath(request)) {
-            apiKeyValidator.validateApiKey(apiKey)
+            if (isRegistrationPath(request)) {
+                apiKeyValidator.validateApiKey(apiKey)
+                filterChain.doFilter(request, response)
+                return
+            }
+
+            val userId = resolveUserId(apiKey) ?: throw ApiKeyInvalidException()
+            setAuthentication(userId)
             filterChain.doFilter(request, response)
-            return
+        } catch (ex: BusinessException) {
+            val errorCode = ex.errorCode
+            response.status = errorCode.httpStatus.value()
+            response.contentType = MediaType.APPLICATION_JSON_VALUE
+            response.characterEncoding = "UTF-8"
+            objectMapper.writeValue(response.writer, ErrorResponse.of(errorCode))
         }
-
-        val userId = resolveUserId(apiKey) ?: throw ApiKeyInvalidException()
-        setAuthentication(userId)
-        filterChain.doFilter(request, response)
     }
 
     private fun extractApiKey(request: HttpServletRequest): String? {

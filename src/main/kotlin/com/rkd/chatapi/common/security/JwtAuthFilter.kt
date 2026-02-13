@@ -1,8 +1,8 @@
 package com.rkd.chatapi.common.security
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.rkd.chatapi.common.error.ErrorCode
 import com.rkd.chatapi.common.error.ErrorResponse
+import com.rkd.chatapi.common.error.exception.BusinessException
 import com.rkd.chatapi.common.security.exception.AccessTokenInvalidException
 import com.rkd.chatapi.common.security.exception.AccessTokenNotExistException
 import jakarta.servlet.FilterChain
@@ -32,12 +32,20 @@ class JwtAuthFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        val token = extractToken(request) ?: throw AccessTokenNotExistException()
+        try {
+            val token = extractToken(request) ?: throw AccessTokenNotExistException()
 
-        val userId = parseUserId(token) ?: throw AccessTokenInvalidException()
+            val userId = parseUserId(token) ?: throw AccessTokenInvalidException()
 
-        setAuthentication(userId)
-        filterChain.doFilter(request, response)
+            setAuthentication(userId)
+            filterChain.doFilter(request, response)
+        } catch (ex: BusinessException) {
+            val errorCode = ex.errorCode
+            response.status = errorCode.httpStatus.value()
+            response.contentType = MediaType.APPLICATION_JSON_VALUE
+            response.characterEncoding = "UTF-8"
+            objectMapper.writeValue(response.writer, ErrorResponse.of(errorCode))
+        }
     }
 
     private fun extractToken(request: HttpServletRequest): String? {

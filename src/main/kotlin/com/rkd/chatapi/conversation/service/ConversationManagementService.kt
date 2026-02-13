@@ -9,7 +9,7 @@ import com.rkd.chatapi.user.exception.UserNotExistException
 import org.springframework.stereotype.Service
 
 @Service
-class ConversationService(
+class ConversationManagementService(
     private val conversationRepository: ConversationRepository,
     private val userRepository: UserRepository
 ) {

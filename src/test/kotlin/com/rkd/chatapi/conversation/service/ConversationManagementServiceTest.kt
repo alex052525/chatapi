@@ -17,10 +17,10 @@ import org.mockito.kotlin.whenever
 import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
-class ConversationServiceTest {
+class ConversationManagementServiceTest {
 
     @InjectMocks
-    private lateinit var conversationService: ConversationService
+    private lateinit var conversationManagementService: ConversationManagementService
 
     @Mock
     private lateinit var conversationRepository: ConversationRepository
@@ -30,7 +30,7 @@ class ConversationServiceTest {
 
     @Test
     fun `createConversation returns conversation id`() {
-        val user = User(apiKey = "hashed-key").apply {
+        val user = User(apiKey = "hashed-key", apiKeyEnc = "enc-key").apply {
             id = 1L
         }
         val request = ConversationCreateRequest(title = "hello")
@@ -39,7 +39,7 @@ class ConversationServiceTest {
             (invocation.arguments[0] as Conversation).apply { id = 10L }
         }
 
-        val response = conversationService.createConversation(1L, request)
+        val response = conversationManagementService.createConversation(1L, request)
 
         assertThat(response.conversationId).isEqualTo(10L)
     }
@@ -50,7 +50,7 @@ class ConversationServiceTest {
         whenever(userRepository.findById(1L)).thenReturn(Optional.empty())
 
         org.junit.jupiter.api.assertThrows<UserNotExistException> {
-            conversationService.createConversation(1L, request)
+            conversationManagementService.createConversation(1L, request)
         }
     }
 }

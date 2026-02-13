@@ -6,7 +6,7 @@ import com.rkd.chatapi.user.validator.UserValidator
 import org.springframework.stereotype.Service
 
 @Service
-class UserService(
+class UserManagementService(
     private val userRepository: UserRepository,
     private val userValidator: UserValidator
 ) {
@@ -15,11 +15,5 @@ class UserService(
 
         val user = User(apiKey = hashedApiKey, apiKeyEnc = encryptedApiKey)
         return userRepository.save(user).id!!
-    }
-
-    fun findUserByApiKey(hashedApiKey: String): Long {
-        userValidator.validateUserRegistered(hashedApiKey)
-
-        return userRepository.findByApiKey(hashedApiKey)!!.id!!
     }
 }
