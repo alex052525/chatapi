@@ -26,5 +26,6 @@ enum class ErrorCode(
 
     // conversation
     CONVERSATION_NOT_FOUND("CONVERSATION0001", "대화를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
+    CONVERSATION_ACCESS_DENIED("CONVERSATION0002", "해당 대화에 대한 접근 권한이 없습니다.", HttpStatus.FORBIDDEN),
 
 }
