@@ -4,6 +4,7 @@ import com.rkd.chatapi.conversation.domain.entity.Conversation
 import com.rkd.chatapi.conversation.domain.repository.ConversationRepository
 import com.rkd.chatapi.conversation.dto.response.ConversationInfoResponse
 import com.rkd.chatapi.conversation.dto.response.ConversationListResponse
+import com.rkd.chatapi.conversation.exception.ConversationAccessDeniedException
 import com.rkd.chatapi.conversation.exception.ConversationNotExistException
 import com.rkd.chatapi.message.domain.entity.Message
 import com.rkd.chatapi.message.domain.repository.MessageRepository
@@ -29,9 +30,9 @@ class ConversationInfoService(
         )
     }
 
-    fun getConversationWithMessages(conversationId: Long, cursor: Long?, size: Int): MessageListResponse {
-        val conversation = conversationRepository.findById(conversationId)
-            .orElseThrow { ConversationNotExistException() }
+    fun getConversationWithMessages(userId: Long, conversationId: Long, cursor: Long?, size: Int): MessageListResponse {
+        val conversation = findConversation(conversationId)
+        validateOwner(conversation, userId)
 
         val messages = fetchMessages(conversation, cursor, size)
         val hasNext = messages.size > size
@@ -42,6 +43,17 @@ class ConversationInfoService(
             nextCursor = if (hasNext) result.last().id else null,
             hasNext = hasNext
         )
+    }
+
+    private fun findConversation(conversationId: Long): Conversation {
+        return conversationRepository.findById(conversationId)
+            .orElseThrow { ConversationNotExistException() }
+    }
+
+    private fun validateOwner(conversation: Conversation, userId: Long) {
+        if (conversation.user.id != userId) {
+            throw ConversationAccessDeniedException()
+        }
     }
 
     private fun fetchConversations(userId: Long, cursor: Long?, size: Int): List<Conversation> {

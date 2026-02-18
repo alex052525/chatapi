@@ -6,7 +6,9 @@ import com.rkd.chatapi.message.domain.MessageRole
 import com.rkd.chatapi.message.domain.entity.Message
 import com.rkd.chatapi.message.domain.repository.MessageRepository
 import com.rkd.chatapi.user.domain.entity.User
+import com.rkd.chatapi.conversation.exception.ConversationAccessDeniedException
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
@@ -121,7 +123,7 @@ class ConversationInfoServiceTest {
         whenever(messageRepository.findByConversationOrderByCreatedAtDesc(eq(conversation), any<PageRequest>()))
             .thenReturn(messages)
 
-        val response = conversationInfoService.getConversationWithMessages(conversationId = 10L, cursor = null, size = 10)
+        val response = conversationInfoService.getConversationWithMessages(userId = 1L, conversationId = 10L, cursor = null, size = 10)
 
         assertThat(response.messages).hasSize(2)
         assertThat(response.messages[0].role).isEqualTo("ASSISTANT")
@@ -141,7 +143,7 @@ class ConversationInfoServiceTest {
         whenever(messageRepository.findByConversationAndCursorOrderByCreatedAtDesc(eq(conversation), eq(3L), any<PageRequest>()))
             .thenReturn(messages)
 
-        val response = conversationInfoService.getConversationWithMessages(conversationId = 10L, cursor = 3L, size = 10)
+        val response = conversationInfoService.getConversationWithMessages(userId = 1L, conversationId = 10L, cursor = 3L, size = 10)
 
         assertThat(response.messages).hasSize(2)
         assertThat(response.hasNext).isFalse()
@@ -159,7 +161,7 @@ class ConversationInfoServiceTest {
         whenever(messageRepository.findByConversationOrderByCreatedAtDesc(eq(conversation), any<PageRequest>()))
             .thenReturn(messages)
 
-        val response = conversationInfoService.getConversationWithMessages(conversationId = 10L, cursor = null, size = 2)
+        val response = conversationInfoService.getConversationWithMessages(userId = 1L, conversationId = 10L, cursor = null, size = 2)
 
         assertThat(response.messages).hasSize(2)
         assertThat(response.hasNext).isTrue()
@@ -172,10 +174,23 @@ class ConversationInfoServiceTest {
         whenever(messageRepository.findByConversationOrderByCreatedAtDesc(eq(conversation), any<PageRequest>()))
             .thenReturn(emptyList())
 
-        val response = conversationInfoService.getConversationWithMessages(conversationId = 10L, cursor = null, size = 10)
+        val response = conversationInfoService.getConversationWithMessages(userId = 1L, conversationId = 10L, cursor = null, size = 10)
 
         assertThat(response.messages).isEmpty()
         assertThat(response.hasNext).isFalse()
         assertThat(response.nextCursor).isNull()
+    }
+
+    @Test
+    fun `getConversationWithMessages throws exception when user is not owner`() {
+        val owner = User(apiKey = "hashed-key", apiKeyEnc = "enc-key").apply { id = 1L }
+        val otherUserId = 999L
+        val ownerConversation = Conversation(user = owner, title = "owner's chat").apply { id = 20L }
+
+        whenever(conversationRepository.findById(20L)).thenReturn(Optional.of(ownerConversation))
+
+        assertThatThrownBy {
+            conversationInfoService.getConversationWithMessages(userId = otherUserId, conversationId = 20L, cursor = null, size = 10)
+        }.isInstanceOf(ConversationAccessDeniedException::class.java)
     }
 }

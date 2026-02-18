@@ -84,7 +84,7 @@ class ConversationInfoControllerTest {
             nextCursor = null,
             hasNext = false
         )
-        whenever(conversationInfoService.getConversationWithMessages(conversationId, null, 10))
+        whenever(conversationInfoService.getConversationWithMessages(userId, conversationId, null, 10))
             .thenReturn(response)
 
         val authentication = JwtAuthToken(userId).apply { isAuthenticated = true }

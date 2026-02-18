@@ -33,7 +33,7 @@ class ConversationInfoController(
         @RequestParam(required = false) cursor: Long?,
         @RequestParam(defaultValue = "6") size: Int
     ): ResponseEntity<MessageListResponse> {
-        val messagesGetResponse = conversationInfoService.getConversationWithMessages(conversationId, cursor, size)
+        val messagesGetResponse = conversationInfoService.getConversationWithMessages(userId, conversationId, cursor, size)
         return ResponseEntity.ok(messagesGetResponse)
     }
 }
