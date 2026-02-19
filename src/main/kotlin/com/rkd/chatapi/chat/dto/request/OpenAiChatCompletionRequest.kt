@@ -4,5 +4,6 @@ import com.rkd.chatapi.chat.dto.OpenAiChatMessage
 
 data class OpenAiChatCompletionRequest(
     val model: String,
-    val messages: List<OpenAiChatMessage>
+    val messages: List<OpenAiChatMessage>,
+    val stream: Boolean = false
 )
