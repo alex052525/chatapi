@@ -13,6 +13,7 @@ import com.rkd.chatapi.conversation.domain.entity.Conversation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
 @Service
 class ChatCompletionService(
@@ -23,14 +24,8 @@ class ChatCompletionService(
     @Value("\${openai.history-limit}") private val historyLimit: Int
 ) {
     fun completeChat(userId: Long, request: ChatCompletionRequest): ChatCompletionResponse {
-        val conversation = conversationReader.findConversationById(request.conversationId)
+        val (conversation, allMessages) = prepareChat(request)
 
-        // 이전 메시지 조회 (최근 N개, 시간순 정렬)
-        val previousMessages = getPreviosuMessages(conversation)
-        saveUserMessage(conversation, request.content)
-
-        // 이전 메시지 + 현재 메시지를 함께 전달
-        val allMessages = previousMessages + OpenAiChatMessage(role = "user", content = request.content)
         val answer = openAiChatAdapter.completeChat(userId, allMessages)
         val savedAssistant = saveAssistantMessage(conversation, answer)
 
@@ -38,6 +33,34 @@ class ChatCompletionService(
             messageId = savedAssistant.id!!,
             answer = answer
         )
+    }
+
+    fun completeChatStream(userId: Long, request: ChatCompletionRequest, emitter: SseEmitter) {
+        val (conversation, allMessages) = prepareChat(request)
+        val contentBuffer = StringBuilder()
+
+        openAiChatAdapter.completeChatStream(userId, allMessages)
+            .doOnNext { chunk ->
+                contentBuffer.append(chunk)
+                emitter.send(SseEmitter.event().data(mapOf("content" to chunk)))
+            }
+            .doOnComplete {
+                saveAssistantMessage(conversation, contentBuffer.toString())
+                emitter.send(SseEmitter.event().data("[DONE]"))
+                emitter.complete()
+            }
+            .doOnError { error ->
+                emitter.completeWithError(error)
+            }
+            .subscribe()
+    }
+
+    private fun prepareChat(request: ChatCompletionRequest): Pair<Conversation, List<OpenAiChatMessage>> {
+        val conversation = conversationReader.findConversationById(request.conversationId)
+        val previousMessages = getPreviousMessages(conversation)
+        saveUserMessage(conversation, request.content)
+        val allMessages = previousMessages + OpenAiChatMessage(role = "user", content = request.content)
+        return Pair(conversation, allMessages)
     }
 
     private fun saveUserMessage(conversation: Conversation, content: String) {
@@ -58,7 +81,7 @@ class ChatCompletionService(
         return messageWriter.save(assistantMessage)
     }
 
-    private fun getPreviosuMessages(conversation: Conversation): List<OpenAiChatMessage> {
+    private fun getPreviousMessages(conversation: Conversation): List<OpenAiChatMessage> {
         return messageReader
             .findMessagesByConversation(conversation, PageRequest.of(0, historyLimit))
             .reversed()
