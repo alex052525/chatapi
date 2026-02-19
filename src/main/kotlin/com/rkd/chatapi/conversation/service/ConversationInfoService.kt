@@ -4,8 +4,8 @@ import com.rkd.chatapi.conversation.domain.ConversationReader
 import com.rkd.chatapi.conversation.domain.entity.Conversation
 import com.rkd.chatapi.conversation.dto.response.ConversationInfoResponse
 import com.rkd.chatapi.conversation.dto.response.ConversationListResponse
+import com.rkd.chatapi.message.domain.MessageReader
 import com.rkd.chatapi.message.domain.entity.Message
-import com.rkd.chatapi.message.domain.repository.MessageRepository
 import com.rkd.chatapi.message.dto.response.MessageInfoResponse
 import com.rkd.chatapi.message.dto.response.MessageListResponse
 import org.springframework.data.domain.PageRequest
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class ConversationInfoService(
-    private val messageRepository: MessageRepository,
+    private val messageReader: MessageReader,
     private val conversationReader: ConversationReader
 ) {
     fun getConversations(userId: Long, cursor: Long?, size: Int): ConversationListResponse {
@@ -53,8 +53,8 @@ class ConversationInfoService(
     private fun fetchMessages(conversation: Conversation, cursor: Long?, size: Int): List<Message> {
         val pageable = PageRequest.of(0, size + 1)
         return cursor?.let {
-            messageRepository.findByConversationAndCursorOrderByCreatedAtDesc(conversation, it, pageable)
-        } ?: messageRepository.findByConversationOrderByCreatedAtDesc(conversation, pageable)
+            messageReader.findMessagesByConversationWithCursor(conversation, it, pageable)
+        } ?: messageReader.findMessagesByConversation(conversation, pageable)
     }
 
     private fun Conversation.toInfoResponse() = ConversationInfoResponse(
