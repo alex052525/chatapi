@@ -4,8 +4,8 @@ import com.rkd.chatapi.conversation.domain.ConversationReader
 import com.rkd.chatapi.conversation.domain.ConversationWriter
 import com.rkd.chatapi.conversation.domain.entity.Conversation
 import com.rkd.chatapi.conversation.dto.request.ConversationCreateRequest
+import com.rkd.chatapi.user.domain.UserReader
 import com.rkd.chatapi.user.domain.entity.User
-import com.rkd.chatapi.user.domain.repository.UserRepository
 import com.rkd.chatapi.conversation.exception.ConversationAccessDeniedException
 import com.rkd.chatapi.conversation.exception.ConversationNotExistException
 import com.rkd.chatapi.user.exception.UserNotExistException
@@ -18,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 class ConversationManagementServiceTest {
@@ -27,7 +26,7 @@ class ConversationManagementServiceTest {
     private lateinit var conversationManagementService: ConversationManagementService
 
     @Mock
-    private lateinit var userRepository: UserRepository
+    private lateinit var userReader: UserReader
 
     @Mock
     private lateinit var conversationReader: ConversationReader
@@ -41,7 +40,7 @@ class ConversationManagementServiceTest {
             id = 1L
         }
         val request = ConversationCreateRequest(title = "hello")
-        whenever(userRepository.findById(1L)).thenReturn(Optional.of(user))
+        whenever(userReader.findUserById(1L)).thenReturn(user)
         whenever(conversationWriter.save(any<Conversation>())).thenAnswer { invocation ->
             (invocation.arguments[0] as Conversation).apply { id = 10L }
         }
@@ -54,7 +53,7 @@ class ConversationManagementServiceTest {
     @Test
     fun `createConversation throws when user not found`() {
         val request = ConversationCreateRequest(title = "hello")
-        whenever(userRepository.findById(1L)).thenReturn(Optional.empty())
+        whenever(userReader.findUserById(1L)).thenThrow(UserNotExistException())
 
         org.junit.jupiter.api.assertThrows<UserNotExistException> {
             conversationManagementService.createConversation(1L, request)

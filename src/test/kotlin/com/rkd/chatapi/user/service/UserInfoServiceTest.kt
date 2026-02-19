@@ -1,7 +1,7 @@
 package com.rkd.chatapi.user.service
 
+import com.rkd.chatapi.user.domain.UserReader
 import com.rkd.chatapi.user.domain.entity.User
-import com.rkd.chatapi.user.domain.repository.UserRepository
 import com.rkd.chatapi.user.validator.UserValidator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -18,7 +18,7 @@ class UserInfoServiceTest {
     private lateinit var userInfoService: UserInfoService
 
     @Mock
-    private lateinit var userRepository: UserRepository
+    private lateinit var userReader: UserReader
 
     @Mock
     private lateinit var userValidator: UserValidator
@@ -29,7 +29,7 @@ class UserInfoServiceTest {
         val existing = User(apiKey = "hashed-key", apiKeyEnc = "enc-key").apply {
             id = 1L
         }
-        whenever(userRepository.findByApiKey("hashed-key")).thenReturn(existing)
+        whenever(userReader.findUserByApiKey("hashed-key")).thenReturn(existing)
 
         // when
         val result = userInfoService.findUserByApiKey("hashed-key")
