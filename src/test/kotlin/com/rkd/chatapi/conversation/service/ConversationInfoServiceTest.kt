@@ -1,5 +1,6 @@
 package com.rkd.chatapi.conversation.service
 
+import com.rkd.chatapi.conversation.domain.ConversationReader
 import com.rkd.chatapi.conversation.domain.entity.Conversation
 import com.rkd.chatapi.conversation.domain.repository.ConversationRepository
 import com.rkd.chatapi.message.domain.MessageRole
@@ -31,6 +32,9 @@ class ConversationInfoServiceTest {
 
     @Mock
     private lateinit var messageRepository: MessageRepository
+
+    @Mock
+    private lateinit var conversationReader: ConversationReader
 
     private val user = User(apiKey = "hashed-key", apiKeyEnc = "enc-key").apply { id = 1L }
     private val conversation = Conversation(user = user, title = "test").apply { id = 10L }
@@ -119,7 +123,7 @@ class ConversationInfoServiceTest {
             message(5L, MessageRole.ASSISTANT, "answer"),
             message(4L, MessageRole.USER, "question")
         )
-        whenever(conversationRepository.findById(10L)).thenReturn(Optional.of(conversation))
+        whenever(conversationReader.findById(10L)).thenReturn(conversation)
         whenever(messageRepository.findByConversationOrderByCreatedAtDesc(eq(conversation), any<PageRequest>()))
             .thenReturn(messages)
 
@@ -139,7 +143,7 @@ class ConversationInfoServiceTest {
             message(2L, MessageRole.USER, "old question"),
             message(1L, MessageRole.ASSISTANT, "old answer")
         )
-        whenever(conversationRepository.findById(10L)).thenReturn(Optional.of(conversation))
+        whenever(conversationReader.findById(10L)).thenReturn(conversation)
         whenever(messageRepository.findByConversationAndCursorOrderByCreatedAtDesc(eq(conversation), eq(3L), any<PageRequest>()))
             .thenReturn(messages)
 
@@ -157,7 +161,7 @@ class ConversationInfoServiceTest {
             message(4L, MessageRole.USER, "newer"),
             message(3L, MessageRole.ASSISTANT, "old")
         )
-        whenever(conversationRepository.findById(10L)).thenReturn(Optional.of(conversation))
+        whenever(conversationReader.findById(10L)).thenReturn(conversation)
         whenever(messageRepository.findByConversationOrderByCreatedAtDesc(eq(conversation), any<PageRequest>()))
             .thenReturn(messages)
 
@@ -170,7 +174,7 @@ class ConversationInfoServiceTest {
 
     @Test
     fun `getConversationWithMessages returns empty list when no messages`() {
-        whenever(conversationRepository.findById(10L)).thenReturn(Optional.of(conversation))
+        whenever(conversationReader.findById(10L)).thenReturn(conversation)
         whenever(messageRepository.findByConversationOrderByCreatedAtDesc(eq(conversation), any<PageRequest>()))
             .thenReturn(emptyList())
 
@@ -187,7 +191,7 @@ class ConversationInfoServiceTest {
         val otherUserId = 999L
         val ownerConversation = Conversation(user = owner, title = "owner's chat").apply { id = 20L }
 
-        whenever(conversationRepository.findById(20L)).thenReturn(Optional.of(ownerConversation))
+        whenever(conversationReader.findById(20L)).thenReturn(ownerConversation)
 
         assertThatThrownBy {
             conversationInfoService.getConversationWithMessages(userId = otherUserId, conversationId = 20L, cursor = null, size = 10)
