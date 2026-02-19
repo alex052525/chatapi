@@ -1,13 +1,11 @@
 package com.rkd.chatapi.conversation.service
 
+import com.rkd.chatapi.conversation.domain.ConversationReader
 import com.rkd.chatapi.conversation.domain.entity.Conversation
-import com.rkd.chatapi.conversation.domain.repository.ConversationRepository
 import com.rkd.chatapi.conversation.dto.response.ConversationInfoResponse
 import com.rkd.chatapi.conversation.dto.response.ConversationListResponse
-import com.rkd.chatapi.conversation.exception.ConversationAccessDeniedException
-import com.rkd.chatapi.conversation.exception.ConversationNotExistException
+import com.rkd.chatapi.message.domain.MessageReader
 import com.rkd.chatapi.message.domain.entity.Message
-import com.rkd.chatapi.message.domain.repository.MessageRepository
 import com.rkd.chatapi.message.dto.response.MessageInfoResponse
 import com.rkd.chatapi.message.dto.response.MessageListResponse
 import org.springframework.data.domain.PageRequest
@@ -15,8 +13,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class ConversationInfoService(
-    private val conversationRepository: ConversationRepository,
-    private val messageRepository: MessageRepository
+    private val messageReader: MessageReader,
+    private val conversationReader: ConversationReader
 ) {
     fun getConversations(userId: Long, cursor: Long?, size: Int): ConversationListResponse {
         val conversations = fetchConversations(userId, cursor, size)
@@ -31,8 +29,8 @@ class ConversationInfoService(
     }
 
     fun getConversationWithMessages(userId: Long, conversationId: Long, cursor: Long?, size: Int): MessageListResponse {
-        val conversation = findConversation(conversationId)
-        validateOwner(conversation, userId)
+        val conversation = conversationReader.findConversationById(conversationId)
+        conversation.validateOwner(userId)
 
         val messages = fetchMessages(conversation, cursor, size)
         val hasNext = messages.size > size
@@ -45,29 +43,18 @@ class ConversationInfoService(
         )
     }
 
-    private fun findConversation(conversationId: Long): Conversation {
-        return conversationRepository.findById(conversationId)
-            .orElseThrow { ConversationNotExistException() }
-    }
-
-    private fun validateOwner(conversation: Conversation, userId: Long) {
-        if (conversation.user.id != userId) {
-            throw ConversationAccessDeniedException()
-        }
-    }
-
     private fun fetchConversations(userId: Long, cursor: Long?, size: Int): List<Conversation> {
         val pageable = PageRequest.of(0, size + 1)
         return cursor?.let {
-            conversationRepository.findByUserAndCursorOrderByCreatedAtDesc(userId, it, pageable)
-        } ?: conversationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+            conversationReader.findConversationsByUserIdWithCursor(userId, it, pageable)
+        } ?: conversationReader.findConversationsByUserId(userId, pageable)
     }
 
     private fun fetchMessages(conversation: Conversation, cursor: Long?, size: Int): List<Message> {
         val pageable = PageRequest.of(0, size + 1)
         return cursor?.let {
-            messageRepository.findByConversationAndCursorOrderByCreatedAtDesc(conversation, it, pageable)
-        } ?: messageRepository.findByConversationOrderByCreatedAtDesc(conversation, pageable)
+            messageReader.findMessagesByConversationWithCursor(conversation, it, pageable)
+        } ?: messageReader.findMessagesByConversation(conversation, pageable)
     }
 
     private fun Conversation.toInfoResponse() = ConversationInfoResponse(

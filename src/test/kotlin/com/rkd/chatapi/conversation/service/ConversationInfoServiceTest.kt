@@ -1,10 +1,10 @@
 package com.rkd.chatapi.conversation.service
 
+import com.rkd.chatapi.conversation.domain.ConversationReader
 import com.rkd.chatapi.conversation.domain.entity.Conversation
-import com.rkd.chatapi.conversation.domain.repository.ConversationRepository
+import com.rkd.chatapi.message.domain.MessageReader
 import com.rkd.chatapi.message.domain.MessageRole
 import com.rkd.chatapi.message.domain.entity.Message
-import com.rkd.chatapi.message.domain.repository.MessageRepository
 import com.rkd.chatapi.user.domain.entity.User
 import com.rkd.chatapi.conversation.exception.ConversationAccessDeniedException
 import org.assertj.core.api.Assertions.assertThat
@@ -18,7 +18,6 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageRequest
-import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 class ConversationInfoServiceTest {
@@ -27,10 +26,10 @@ class ConversationInfoServiceTest {
     private lateinit var conversationInfoService: ConversationInfoService
 
     @Mock
-    private lateinit var conversationRepository: ConversationRepository
+    private lateinit var messageReader: MessageReader
 
     @Mock
-    private lateinit var messageRepository: MessageRepository
+    private lateinit var conversationReader: ConversationReader
 
     private val user = User(apiKey = "hashed-key", apiKeyEnc = "enc-key").apply { id = 1L }
     private val conversation = Conversation(user = user, title = "test").apply { id = 10L }
@@ -51,7 +50,7 @@ class ConversationInfoServiceTest {
             conversation(5L, "newest"),
             conversation(4L, "older")
         )
-        whenever(conversationRepository.findByUserIdOrderByCreatedAtDesc(eq(1L), any<PageRequest>()))
+        whenever(conversationReader.findConversationsByUserId(eq(1L), any<PageRequest>()))
             .thenReturn(conversations)
 
         val response = conversationInfoService.getConversations(userId = 1L, cursor = null, size = 10)
@@ -71,7 +70,7 @@ class ConversationInfoServiceTest {
             conversation(2L, "old"),
             conversation(1L, "oldest")
         )
-        whenever(conversationRepository.findByUserAndCursorOrderByCreatedAtDesc(eq(1L), eq(3L), any<PageRequest>()))
+        whenever(conversationReader.findConversationsByUserIdWithCursor(eq(1L), eq(3L), any<PageRequest>()))
             .thenReturn(conversations)
 
         val response = conversationInfoService.getConversations(userId = 1L, cursor = 3L, size = 10)
@@ -89,7 +88,7 @@ class ConversationInfoServiceTest {
             conversation(4L, "older"),
             conversation(3L, "old")
         )
-        whenever(conversationRepository.findByUserIdOrderByCreatedAtDesc(eq(1L), any<PageRequest>()))
+        whenever(conversationReader.findConversationsByUserId(eq(1L), any<PageRequest>()))
             .thenReturn(conversations)
 
         val response = conversationInfoService.getConversations(userId = 1L, cursor = null, size = 2)
@@ -101,7 +100,7 @@ class ConversationInfoServiceTest {
 
     @Test
     fun `getConversations returns empty list when no conversations`() {
-        whenever(conversationRepository.findByUserIdOrderByCreatedAtDesc(eq(1L), any<PageRequest>()))
+        whenever(conversationReader.findConversationsByUserId(eq(1L), any<PageRequest>()))
             .thenReturn(emptyList())
 
         val response = conversationInfoService.getConversations(userId = 1L, cursor = null, size = 10)
@@ -119,8 +118,8 @@ class ConversationInfoServiceTest {
             message(5L, MessageRole.ASSISTANT, "answer"),
             message(4L, MessageRole.USER, "question")
         )
-        whenever(conversationRepository.findById(10L)).thenReturn(Optional.of(conversation))
-        whenever(messageRepository.findByConversationOrderByCreatedAtDesc(eq(conversation), any<PageRequest>()))
+        whenever(conversationReader.findConversationById(10L)).thenReturn(conversation)
+        whenever(messageReader.findMessagesByConversation(eq(conversation), any<PageRequest>()))
             .thenReturn(messages)
 
         val response = conversationInfoService.getConversationWithMessages(userId = 1L, conversationId = 10L, cursor = null, size = 10)
@@ -139,8 +138,8 @@ class ConversationInfoServiceTest {
             message(2L, MessageRole.USER, "old question"),
             message(1L, MessageRole.ASSISTANT, "old answer")
         )
-        whenever(conversationRepository.findById(10L)).thenReturn(Optional.of(conversation))
-        whenever(messageRepository.findByConversationAndCursorOrderByCreatedAtDesc(eq(conversation), eq(3L), any<PageRequest>()))
+        whenever(conversationReader.findConversationById(10L)).thenReturn(conversation)
+        whenever(messageReader.findMessagesByConversationWithCursor(eq(conversation), eq(3L), any<PageRequest>()))
             .thenReturn(messages)
 
         val response = conversationInfoService.getConversationWithMessages(userId = 1L, conversationId = 10L, cursor = 3L, size = 10)
@@ -157,8 +156,8 @@ class ConversationInfoServiceTest {
             message(4L, MessageRole.USER, "newer"),
             message(3L, MessageRole.ASSISTANT, "old")
         )
-        whenever(conversationRepository.findById(10L)).thenReturn(Optional.of(conversation))
-        whenever(messageRepository.findByConversationOrderByCreatedAtDesc(eq(conversation), any<PageRequest>()))
+        whenever(conversationReader.findConversationById(10L)).thenReturn(conversation)
+        whenever(messageReader.findMessagesByConversation(eq(conversation), any<PageRequest>()))
             .thenReturn(messages)
 
         val response = conversationInfoService.getConversationWithMessages(userId = 1L, conversationId = 10L, cursor = null, size = 2)
@@ -170,8 +169,8 @@ class ConversationInfoServiceTest {
 
     @Test
     fun `getConversationWithMessages returns empty list when no messages`() {
-        whenever(conversationRepository.findById(10L)).thenReturn(Optional.of(conversation))
-        whenever(messageRepository.findByConversationOrderByCreatedAtDesc(eq(conversation), any<PageRequest>()))
+        whenever(conversationReader.findConversationById(10L)).thenReturn(conversation)
+        whenever(messageReader.findMessagesByConversation(eq(conversation), any<PageRequest>()))
             .thenReturn(emptyList())
 
         val response = conversationInfoService.getConversationWithMessages(userId = 1L, conversationId = 10L, cursor = null, size = 10)
@@ -187,7 +186,7 @@ class ConversationInfoServiceTest {
         val otherUserId = 999L
         val ownerConversation = Conversation(user = owner, title = "owner's chat").apply { id = 20L }
 
-        whenever(conversationRepository.findById(20L)).thenReturn(Optional.of(ownerConversation))
+        whenever(conversationReader.findConversationById(20L)).thenReturn(ownerConversation)
 
         assertThatThrownBy {
             conversationInfoService.getConversationWithMessages(userId = otherUserId, conversationId = 20L, cursor = null, size = 10)

@@ -1,10 +1,11 @@
 package com.rkd.chatapi.chat.service
 
 import com.rkd.chatapi.chat.dto.OpenAiChatMessage
+import com.rkd.chatapi.conversation.domain.ConversationReader
 import com.rkd.chatapi.conversation.domain.entity.Conversation
-import com.rkd.chatapi.conversation.domain.repository.ConversationRepository
+import com.rkd.chatapi.message.domain.MessageReader
+import com.rkd.chatapi.message.domain.MessageWriter
 import com.rkd.chatapi.message.domain.entity.Message
-import com.rkd.chatapi.message.domain.repository.MessageRepository
 import com.rkd.chatapi.chat.dto.request.ChatCompletionRequest
 import com.rkd.chatapi.chat.adapter.OpenAiChatAdapter
 import com.rkd.chatapi.user.domain.entity.User
@@ -17,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.Pageable
-import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 class ChatCompletionServiceTest {
@@ -25,10 +25,13 @@ class ChatCompletionServiceTest {
     private lateinit var chatCompletionService: ChatCompletionService
 
     @Mock
-    private lateinit var conversationRepository: ConversationRepository
+    private lateinit var conversationReader: ConversationReader
 
     @Mock
-    private lateinit var messageRepository: MessageRepository
+    private lateinit var messageReader: MessageReader
+
+    @Mock
+    private lateinit var messageWriter: MessageWriter
 
     @Mock
     private lateinit var openAiChatAdapter: OpenAiChatAdapter
@@ -36,8 +39,9 @@ class ChatCompletionServiceTest {
     @BeforeEach
     fun setUp() {
         chatCompletionService = ChatCompletionService(
-            conversationRepository = conversationRepository,
-            messageRepository = messageRepository,
+            conversationReader = conversationReader,
+            messageReader = messageReader,
+            messageWriter = messageWriter,
             openAiChatAdapter = openAiChatAdapter,
             historyLimit = 10
         )
@@ -51,13 +55,13 @@ class ChatCompletionServiceTest {
         ).apply { id = 1L }
         val request = ChatCompletionRequest(conversationId = 1L, content = "hi")
 
-        whenever(conversationRepository.findById(1L)).thenReturn(Optional.of(conversation))
-        whenever(messageRepository.findByConversationOrderByCreatedAtDesc(any(), any<Pageable>()))
+        whenever(conversationReader.findConversationById(1L)).thenReturn(conversation)
+        whenever(messageReader.findMessagesByConversation(any(), any<Pageable>()))
             .thenReturn(emptyList())
         whenever(openAiChatAdapter.completeChat(any(), any<List<OpenAiChatMessage>>())).thenReturn("answer")
 
         var saveCount = 0
-        whenever(messageRepository.save(any<Message>())).thenAnswer { invocation ->
+        whenever(messageWriter.save(any<Message>())).thenAnswer { invocation ->
             saveCount += 1
             (invocation.arguments[0] as Message).apply {
                 id = if (saveCount == 1) 100L else 200L

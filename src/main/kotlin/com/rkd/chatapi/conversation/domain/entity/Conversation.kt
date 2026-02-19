@@ -1,8 +1,10 @@
 package com.rkd.chatapi.conversation.domain.entity
 
+import com.rkd.chatapi.common.domain.entity.BaseTimeEntity
+import com.rkd.chatapi.conversation.exception.ConversationAccessDeniedException
 import com.rkd.chatapi.message.domain.entity.Message
 import com.rkd.chatapi.user.domain.entity.User
-import com.rkd.chatapi.common.domain.entity.BaseTimeEntity
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
@@ -31,6 +33,12 @@ class Conversation(
     var title: String = title
         private set
 
-    @OneToMany(mappedBy = "conversation")
+    @OneToMany(mappedBy = "conversation", cascade = [CascadeType.ALL], orphanRemoval = true)
     var messages: MutableList<Message> = mutableListOf()
+
+    fun validateOwner(userId: Long) {
+        if (user.id != userId) {
+            throw ConversationAccessDeniedException()
+        }
+    }
 }
