@@ -1,5 +1,6 @@
 package com.rkd.chatapi.conversation.service
 
+import com.rkd.chatapi.conversation.domain.ConversationReader
 import com.rkd.chatapi.conversation.domain.entity.Conversation
 import com.rkd.chatapi.conversation.domain.repository.ConversationRepository
 import com.rkd.chatapi.conversation.dto.request.ConversationCreateRequest
@@ -11,7 +12,8 @@ import org.springframework.stereotype.Service
 @Service
 class ConversationManagementService(
     private val conversationRepository: ConversationRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val conversationReader: ConversationReader
 ) {
     fun createConversation(userId: Long, conversationCreateRequest: ConversationCreateRequest): ConversationCreateResponse {
         val user = userRepository.findById(userId).orElseThrow { UserNotExistException() }
@@ -20,5 +22,11 @@ class ConversationManagementService(
             title = conversationCreateRequest.title
         )
         return ConversationCreateResponse(conversationRepository.save(conversation).id!!)
+    }
+
+    fun deleteConversation(userId: Long, conversationId: Long) {
+        val conversation = conversationReader.findById(conversationId)
+        conversation.validateOwner(userId)
+        conversationRepository.delete(conversation)
     }
 }
