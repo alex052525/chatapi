@@ -14,6 +14,7 @@ import org.springframework.http.MediaType
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
@@ -55,6 +56,24 @@ class ConversationManagementControllerTest {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
                     jsonPath("$.conversationId") { value(conversationId) }
+                }
+        } finally {
+            SecurityContextHolder.clearContext()
+        }
+    }
+
+    @Test
+    fun `delete conversation returns no content`() {
+        val userId = 1L
+        val conversationId = 10L
+
+        val authentication = JwtAuthToken(userId).apply { isAuthenticated = true }
+        SecurityContextHolder.getContext().authentication = authentication
+
+        try {
+            mockMvc.delete("/api/conversations/{conversationId}", conversationId)
+                .andExpect {
+                    status { isNoContent() }
                 }
         } finally {
             SecurityContextHolder.clearContext()
