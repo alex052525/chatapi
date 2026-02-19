@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.whenever
 import org.springframework.http.MediaType
 import org.springframework.security.core.context.SecurityContextHolder
@@ -27,7 +29,7 @@ class ChatCompletionControllerTest {
 
     @BeforeEach
     fun setUp() {
-        val controller = ChatCompletionController(chatCompletionService)
+        val controller = ChatCompletionController(chatCompletionService, 60_000L)
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
             .setCustomArgumentResolvers(AuthenticationPrincipalArgumentResolver())
             .build()
@@ -54,6 +56,26 @@ class ChatCompletionControllerTest {
                     content { contentType(MediaType.APPLICATION_JSON) }
                     jsonPath("$.messageId") { value(100L) }
                     jsonPath("$.answer") { value("answer") }
+                }
+        } finally {
+            SecurityContextHolder.clearContext()
+        }
+    }
+
+    @Test
+    fun `createCompletionStream returns SSE response`() {
+        val userId = 1L
+
+        val authentication = JwtAuthToken(userId).apply { isAuthenticated = true }
+        SecurityContextHolder.getContext().authentication = authentication
+
+        try {
+            mockMvc.post("/api/chat/completions/stream") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"conversationId":10,"content":"hi"}"""
+            }
+                .andExpect {
+                    status { isOk() }
                 }
         } finally {
             SecurityContextHolder.clearContext()
