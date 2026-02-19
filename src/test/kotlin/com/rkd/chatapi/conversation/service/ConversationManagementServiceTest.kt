@@ -1,8 +1,8 @@
 package com.rkd.chatapi.conversation.service
 
 import com.rkd.chatapi.conversation.domain.ConversationReader
+import com.rkd.chatapi.conversation.domain.ConversationWriter
 import com.rkd.chatapi.conversation.domain.entity.Conversation
-import com.rkd.chatapi.conversation.domain.repository.ConversationRepository
 import com.rkd.chatapi.conversation.dto.request.ConversationCreateRequest
 import com.rkd.chatapi.user.domain.entity.User
 import com.rkd.chatapi.user.domain.repository.UserRepository
@@ -27,13 +27,13 @@ class ConversationManagementServiceTest {
     private lateinit var conversationManagementService: ConversationManagementService
 
     @Mock
-    private lateinit var conversationRepository: ConversationRepository
-
-    @Mock
     private lateinit var userRepository: UserRepository
 
     @Mock
     private lateinit var conversationReader: ConversationReader
+
+    @Mock
+    private lateinit var conversationWriter: ConversationWriter
 
     @Test
     fun `createConversation returns conversation id`() {
@@ -42,7 +42,7 @@ class ConversationManagementServiceTest {
         }
         val request = ConversationCreateRequest(title = "hello")
         whenever(userRepository.findById(1L)).thenReturn(Optional.of(user))
-        whenever(conversationRepository.save(any<Conversation>())).thenAnswer { invocation ->
+        whenever(conversationWriter.save(any<Conversation>())).thenAnswer { invocation ->
             (invocation.arguments[0] as Conversation).apply { id = 10L }
         }
 
@@ -68,16 +68,16 @@ class ConversationManagementServiceTest {
         val owner = User(apiKey = "hashed-key", apiKeyEnc = "enc-key").apply { id = 1L }
         val conversation = Conversation(user = owner, title = "to delete").apply { id = 10L }
 
-        whenever(conversationReader.findById(10L)).thenReturn(conversation)
+        whenever(conversationReader.findConversationById(10L)).thenReturn(conversation)
 
         conversationManagementService.deleteConversation(userId = 1L, conversationId = 10L)
 
-        verify(conversationRepository).delete(conversation)
+        verify(conversationWriter).delete(conversation)
     }
 
     @Test
     fun `deleteConversation throws when conversation not found`() {
-        whenever(conversationReader.findById(10L)).thenThrow(ConversationNotExistException())
+        whenever(conversationReader.findConversationById(10L)).thenThrow(ConversationNotExistException())
 
         org.junit.jupiter.api.assertThrows<ConversationNotExistException> {
             conversationManagementService.deleteConversation(userId = 1L, conversationId = 10L)
@@ -90,7 +90,7 @@ class ConversationManagementServiceTest {
         val otherUserId = 999L
         val conversation = Conversation(user = owner, title = "owner's chat").apply { id = 10L }
 
-        whenever(conversationReader.findById(10L)).thenReturn(conversation)
+        whenever(conversationReader.findConversationById(10L)).thenReturn(conversation)
 
         org.junit.jupiter.api.assertThrows<ConversationAccessDeniedException> {
             conversationManagementService.deleteConversation(userId = otherUserId, conversationId = 10L)

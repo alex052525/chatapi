@@ -2,7 +2,6 @@ package com.rkd.chatapi.conversation.service
 
 import com.rkd.chatapi.conversation.domain.ConversationReader
 import com.rkd.chatapi.conversation.domain.entity.Conversation
-import com.rkd.chatapi.conversation.domain.repository.ConversationRepository
 import com.rkd.chatapi.conversation.dto.response.ConversationInfoResponse
 import com.rkd.chatapi.conversation.dto.response.ConversationListResponse
 import com.rkd.chatapi.message.domain.entity.Message
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Service
 
 @Service
 class ConversationInfoService(
-    private val conversationRepository: ConversationRepository,
     private val messageRepository: MessageRepository,
     private val conversationReader: ConversationReader
 ) {
@@ -31,7 +29,7 @@ class ConversationInfoService(
     }
 
     fun getConversationWithMessages(userId: Long, conversationId: Long, cursor: Long?, size: Int): MessageListResponse {
-        val conversation = conversationReader.findById(conversationId)
+        val conversation = conversationReader.findConversationById(conversationId)
         conversation.validateOwner(userId)
 
         val messages = fetchMessages(conversation, cursor, size)
@@ -48,8 +46,8 @@ class ConversationInfoService(
     private fun fetchConversations(userId: Long, cursor: Long?, size: Int): List<Conversation> {
         val pageable = PageRequest.of(0, size + 1)
         return cursor?.let {
-            conversationRepository.findByUserAndCursorOrderByCreatedAtDesc(userId, it, pageable)
-        } ?: conversationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+            conversationReader.findConversationsByUserIdWithCursor(userId, it, pageable)
+        } ?: conversationReader.findConversationsByUserId(userId, pageable)
     }
 
     private fun fetchMessages(conversation: Conversation, cursor: Long?, size: Int): List<Message> {
