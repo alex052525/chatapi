@@ -1,6 +1,7 @@
 package com.rkd.chatapi.chat.controller
 
 import com.rkd.chatapi.common.annotation.LoginUser
+import com.rkd.chatapi.chat.adapter.OpenAiChatAdapter.Companion.STREAM_DONE_MARKER
 import com.rkd.chatapi.chat.dto.request.ChatCompletionRequest
 import com.rkd.chatapi.chat.dto.response.ChatCompletionResponse
 import com.rkd.chatapi.chat.service.ChatCompletionService
@@ -40,7 +41,7 @@ class ChatCompletionController(
                 emitter.send(SseEmitter.event().data(chunk, MediaType.APPLICATION_JSON))
             }
             .doOnComplete {
-                emitter.send(SseEmitter.event().data("[DONE]"))
+                emitter.send(SseEmitter.event().data(STREAM_DONE_MARKER))
                 emitter.complete()
             }
             .doOnError { error ->

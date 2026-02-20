@@ -22,10 +22,15 @@ import reactor.core.publisher.Flux
 class OpenAiChatAdapter(
     private val userReader: UserReader,
     private val apiKeyEncryptor: ApiKeyEncryptor,
+    @Value("\${openai.base-url}") private val baseUrl: String,
     @Value("\${openai.model}") private val model: String,
     @Value("\${openai.connect-timeout-ms}") private val connectTimeoutMs: Long,
     @Value("\${openai.read-timeout-ms}") private val readTimeoutMs: Long
 ) {
+    companion object {
+        const val STREAM_DONE_MARKER = "[DONE]"
+    }
+
     private val objectMapper = jacksonObjectMapper()
 
     fun completeChat(userId: Long, messages: List<OpenAiChatMessage>): String {
@@ -37,7 +42,7 @@ class OpenAiChatAdapter(
         }
 
         val client = RestClient.builder()
-            .baseUrl("https://api.openai.com/v1")
+            .baseUrl(baseUrl)
             .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer $apiKey")
             .requestFactory(requestFactory)
             .build()
@@ -63,7 +68,7 @@ class OpenAiChatAdapter(
         val apiKey = decryptApiKey(userId)
 
         val webClient = WebClient.builder()
-            .baseUrl("https://api.openai.com/v1")
+            .baseUrl(baseUrl)
             .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer $apiKey")
             .build()
 
@@ -79,7 +84,7 @@ class OpenAiChatAdapter(
             .bodyValue(request)
             .retrieve()
             .bodyToFlux(String::class.java)
-            .filter { it.isNotBlank() && it != "[DONE]" }
+            .filter { it.isNotBlank() && it != STREAM_DONE_MARKER }
             .map { data ->
                 val chunk = objectMapper.readValue(data, OpenAiStreamChatCompletionResponse::class.java)
                 chunk.choices.firstOrNull()?.delta?.content ?: ""

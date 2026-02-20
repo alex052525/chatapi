@@ -1,6 +1,7 @@
 package com.rkd.chatapi.auth.validator
 
 import com.rkd.chatapi.auth.exception.ApiKeyInvalidException
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
@@ -9,12 +10,13 @@ import org.springframework.web.client.RestClient
 
 @Component
 class ApiKeyValidator(
-    private val restClientBuilder: RestClient.Builder
+    private val restClientBuilder: RestClient.Builder,
+    @Value("\${openai.base-url}") private val baseUrl: String
 ) {
 
     fun validateApiKey(apiKey: String) {
         val client = restClientBuilder
-            .baseUrl("https://api.openai.com/v1")
+            .baseUrl(baseUrl)
             .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer $apiKey")
             .build()
 

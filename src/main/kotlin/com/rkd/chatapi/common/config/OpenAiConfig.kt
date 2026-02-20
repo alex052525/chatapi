@@ -13,20 +13,22 @@ class OpenAiConfig {
     @Bean
     fun openAiRestClient(
         builder: RestClient.Builder,
-        @Value("\${openai.api-key}") apiKey: String
+        @Value("\${openai.api-key}") apiKey: String,
+        @Value("\${openai.base-url}") baseUrl: String
     ): RestClient {
         return builder
-            .baseUrl("https://api.openai.com/v1")
+            .baseUrl(baseUrl)
             .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer $apiKey")
             .build()
     }
 
     @Bean
     fun openAiWebClient(
-        @Value("\${openai.api-key}") apiKey: String
+        @Value("\${openai.api-key}") apiKey: String,
+        @Value("\${openai.base-url}") baseUrl: String
     ): WebClient {
         return WebClient.builder()
-            .baseUrl("https://api.openai.com/v1")
+            .baseUrl(baseUrl)
             .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer $apiKey")
             .build()
     }
