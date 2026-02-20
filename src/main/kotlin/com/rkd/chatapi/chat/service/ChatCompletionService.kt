@@ -50,7 +50,7 @@ class ChatCompletionService(
         val conversation = conversationReader.findConversationById(request.conversationId)
         val previousMessages = getPreviousMessages(conversation)
         saveUserMessage(conversation, request.content)
-        val allMessages = previousMessages + OpenAiChatMessage(role = "user", content = request.content)
+        val allMessages = previousMessages + OpenAiChatMessage(role = MessageRole.USER.toOpenAiRole(), content = request.content)
         return Pair(conversation, allMessages)
     }
 
@@ -76,6 +76,6 @@ class ChatCompletionService(
         return messageReader
             .findMessagesByConversation(conversation, PageRequest.of(0, historyLimit))
             .reversed()
-            .map { OpenAiChatMessage(role = it.role.name.lowercase(), content = it.content) }
+            .map { OpenAiChatMessage(role = it.role.toOpenAiRole(), content = it.content) }
     }
 }
