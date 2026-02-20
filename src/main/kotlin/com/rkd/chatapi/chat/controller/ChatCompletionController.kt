@@ -34,7 +34,20 @@ class ChatCompletionController(
         @LoginUser userId: Long
     ): SseEmitter {
         val emitter = SseEmitter(streamTimeoutMs)
-        chatCompletionService.completeChatStream(userId, request, emitter)
+
+        chatCompletionService.completeChatStream(userId, request)
+            .doOnNext { chunk ->
+                emitter.send(SseEmitter.event().data(chunk, MediaType.APPLICATION_JSON))
+            }
+            .doOnComplete {
+                emitter.send(SseEmitter.event().data("[DONE]"))
+                emitter.complete()
+            }
+            .doOnError { error ->
+                emitter.completeWithError(error)
+            }
+            .subscribe()
+
         return emitter
     }
 }

@@ -7,13 +7,14 @@ import com.rkd.chatapi.message.domain.MessageRole
 import com.rkd.chatapi.message.domain.entity.Message
 import com.rkd.chatapi.chat.dto.request.ChatCompletionRequest
 import com.rkd.chatapi.chat.dto.response.ChatCompletionResponse
+import com.rkd.chatapi.chat.dto.response.ChatStreamChunk
 import com.rkd.chatapi.chat.adapter.OpenAiChatAdapter
 import com.rkd.chatapi.chat.dto.OpenAiChatMessage
 import com.rkd.chatapi.conversation.domain.entity.Conversation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
+import reactor.core.publisher.Flux
 
 @Service
 class ChatCompletionService(
@@ -35,24 +36,14 @@ class ChatCompletionService(
         )
     }
 
-    fun completeChatStream(userId: Long, request: ChatCompletionRequest, emitter: SseEmitter) {
+    fun completeChatStream(userId: Long, request: ChatCompletionRequest): Flux<ChatStreamChunk> {
         val (conversation, allMessages) = prepareChat(request)
         val contentBuffer = StringBuilder()
 
-        openAiChatAdapter.completeChatStream(userId, allMessages)
-            .doOnNext { chunk ->
-                contentBuffer.append(chunk)
-                emitter.send(SseEmitter.event().data(mapOf("content" to chunk)))
-            }
-            .doOnComplete {
-                saveAssistantMessage(conversation, contentBuffer.toString())
-                emitter.send(SseEmitter.event().data("[DONE]"))
-                emitter.complete()
-            }
-            .doOnError { error ->
-                emitter.completeWithError(error)
-            }
-            .subscribe()
+        return openAiChatAdapter.completeChatStream(userId, allMessages)
+            .doOnNext { chunk -> contentBuffer.append(chunk) }
+            .map { chunk -> ChatStreamChunk(content = chunk) }
+            .doOnComplete { saveAssistantMessage(conversation, contentBuffer.toString()) }
     }
 
     private fun prepareChat(request: ChatCompletionRequest): Pair<Conversation, List<OpenAiChatMessage>> {

@@ -4,15 +4,16 @@ import com.rkd.chatapi.chat.service.ChatCompletionService
 import com.rkd.chatapi.common.security.JwtAuthToken
 import com.rkd.chatapi.chat.dto.request.ChatCompletionRequest
 import com.rkd.chatapi.chat.dto.response.ChatCompletionResponse
+import com.rkd.chatapi.chat.dto.response.ChatStreamChunk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.whenever
 import org.springframework.http.MediaType
+import reactor.core.publisher.Flux
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver
 import org.springframework.test.web.servlet.MockMvc
@@ -65,6 +66,9 @@ class ChatCompletionControllerTest {
     @Test
     fun `createCompletionStream returns SSE response`() {
         val userId = 1L
+
+        whenever(chatCompletionService.completeChatStream(any(), any()))
+            .thenReturn(Flux.just(ChatStreamChunk("Hello"), ChatStreamChunk(" world")))
 
         val authentication = JwtAuthToken(userId).apply { isAuthenticated = true }
         SecurityContextHolder.getContext().authentication = authentication

@@ -20,10 +20,7 @@ import org.mockito.kotlin.argThat
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.Pageable
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import reactor.core.publisher.Flux
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 @ExtendWith(MockitoExtension::class)
 class ChatCompletionServiceTest {
@@ -97,12 +94,8 @@ class ChatCompletionServiceTest {
             (invocation.arguments[0] as Message).apply { id = 100L }
         }
 
-        val emitter = SseEmitter(60_000L)
-        val latch = CountDownLatch(1)
-        emitter.onCompletion { latch.countDown() }
-
-        chatCompletionService.completeChatStream(1L, request, emitter)
-        latch.await(5, TimeUnit.SECONDS)
+        val flux = chatCompletionService.completeChatStream(1L, request)
+        flux.blockLast()
 
         // user 메시지 + assistant 메시지 총 2번 save 호출
         verify(messageWriter).save(argThat<Message> { role == com.rkd.chatapi.message.domain.MessageRole.USER })
