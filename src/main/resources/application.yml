@@ -26,9 +26,11 @@ springdoc:
 
 openai:
 #  api-key: ${OPENAI_API_KEY}
+  base-url: https://api.openai.com/v1
   model: gpt-5.2
   connect-timeout-ms: 5000
   read-timeout-ms: 30000
+  stream-timeout-ms: 60000
   history-limit: 3
 
 security:

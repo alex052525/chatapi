@@ -5,6 +5,7 @@ import com.rkd.chatapi.auth.dto.response.LoginResponse
 import com.rkd.chatapi.auth.service.ApiKeyManagementService
 import com.rkd.chatapi.auth.service.ApiKeyLoginService
 import com.rkd.chatapi.auth.util.CookieUtil
+import com.rkd.chatapi.common.security.ApiKeyAuthFilter.Companion.API_KEY_HEADER
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -22,13 +23,13 @@ class ApiKeyAuthController(
 ) {
 
     @PostMapping("/apiKey")
-    fun registerApiKey(@RequestHeader("X-API-KEY") apiKey: String): ResponseEntity<ApiKeyRegisterResponse> {
+    fun registerApiKey(@RequestHeader(API_KEY_HEADER) apiKey: String): ResponseEntity<ApiKeyRegisterResponse> {
         val registerApiKeyResponse = apiKeyManagementService.registerApiKey(apiKey)
         return ResponseEntity.ok(registerApiKeyResponse)
     }
 
     @GetMapping("/login")
-    fun login(@RequestHeader("X-API-KEY") apiKey: String): ResponseEntity<LoginResponse> {
+    fun login(@RequestHeader(API_KEY_HEADER) apiKey: String): ResponseEntity<LoginResponse> {
         val loginResponse = apiKeyLoginService.login(apiKey)
         val cookie = cookieUtil.createAccessTokenCookie(token = loginResponse.accessToken)
         return ResponseEntity.ok()

@@ -15,6 +15,10 @@ class ApiKeyAuthFilter(
     private val objectMapper: ObjectMapper
 ) : OncePerRequestFilter() {
 
+    companion object {
+        const val API_KEY_HEADER = "X-API-KEY"
+    }
+
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
         val path = request.servletPath ?: ""
         return path != "/api/auth/login" && path != "/api/auth/apiKey"
@@ -25,7 +29,7 @@ class ApiKeyAuthFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        val apiKey = request.getHeader("X-API-KEY")
+        val apiKey = request.getHeader(API_KEY_HEADER)
         if (apiKey.isNullOrBlank()) {
             writeError(response, ErrorCode.API_KEY_NOT_EXIST)
             return
